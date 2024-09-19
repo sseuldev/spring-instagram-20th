@@ -7,9 +7,7 @@ import lombok.*;
 
 @Entity
 @Getter
-@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
 public class Image extends BaseEntity {
 
     @Id
@@ -17,7 +15,7 @@ public class Image extends BaseEntity {
     @Column(name = "image_id", nullable = false)
     private Long id;
 
-    @Column(name = "image_url", nullable = false)
+    @Column(name = "image_url", nullable = false, columnDefinition = "text")
     private String imageUrl;
 
     @ManyToOne(fetch = FetchType.LAZY)

@@ -9,9 +9,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Getter
-@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
 public class Message extends BaseEntity {
 
     @Id
@@ -19,10 +17,10 @@ public class Message extends BaseEntity {
     @Column(name = "message_id", nullable = false)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "text")
     private String content;
 
-    @Column(name = "send_time")
+    @Column(name = "send_time", columnDefinition = "timestamp")
     private LocalDateTime sendTime;
 
     @ManyToOne(fetch = FetchType.LAZY)

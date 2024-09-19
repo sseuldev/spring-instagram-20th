@@ -8,9 +8,7 @@ import lombok.*;
 
 @Entity
 @Getter
-@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
 public class Post extends BaseEntity {
 
     @Id
@@ -18,11 +16,11 @@ public class Post extends BaseEntity {
     @Column(name = "post_id", nullable = false)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "text")
     private String content;
 
     @Column(name = "comment_count")
-    private int commentCount = 0;
+    private int commentCount;
 
     @Column(length = 30)
     private String location;
@@ -32,4 +30,13 @@ public class Post extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")
     private Member member;
+
+    @Builder
+    public Post(String content, String location, String music, Member member) {
+        this.content = content;
+        this.commentCount = 0;
+        this.location = location;
+        this.music = music;
+        this.member = member;
+    }
 }

@@ -8,9 +8,7 @@ import lombok.*;
 
 @Entity
 @Getter
-@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
 public class Comment extends BaseEntity {
 
     @Id
@@ -18,7 +16,7 @@ public class Comment extends BaseEntity {
     @Column(name = "comment_id", nullable = false)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "text")
     private String content;
 
     @Column(nullable = false)
