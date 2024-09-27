@@ -309,5 +309,3 @@ class PostRepositoryTest {
 - assertFalse(`조건`, `실패 시 출력되는 메시지`)
   : 주어진 조건이 거짓인지 확인
 
-
-
