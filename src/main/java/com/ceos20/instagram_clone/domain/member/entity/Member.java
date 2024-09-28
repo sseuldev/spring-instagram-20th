@@ -51,7 +51,7 @@ public class Member extends BaseEntity {
     @Column(name = "inactive_date", columnDefinition = "timestamp")
     private LocalDateTime inactiveDate;
 
-    @OneToMany(mappedBy = "member", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<Post> posts = new ArrayList<>();
 
