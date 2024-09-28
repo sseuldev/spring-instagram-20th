@@ -3,7 +3,7 @@ CEOS 20th BE study - instagram clone coding
 
 ---
 
-# 1. 도메인 및 ERD 분석
+# 1-1. 도메인 및 ERD 분석
 ![img.png](readme_img/erd.png)
 
 - 게시글 조회
@@ -218,7 +218,7 @@ private LocalDateTime createdAt;
 
 <br />
 
-# 2. Repository 단위 테스트
+# 1-2. Repository 단위 테스트
 ```java
 @SpringBootTest
 @Transactional
@@ -308,4 +308,217 @@ class PostRepositoryTest {
 
 - assertFalse(`조건`, `실패 시 출력되는 메시지`)
   : 주어진 조건이 거짓인지 확인
+
+
+<br />
+
+<br />
+
+
+# 2-1. Service 코드 구현
+## 🤔 예외 처리란?
+코드 내 (주로 `Service` 코드) 에서 발생하는 오류를 체계적이고 일관되게 관리하기 위해서 **예외처리구조** 를 도입한다고 한다.
+
+예외처리구조를 위해서는 총 4가지 파일이 요구된다. 
+
+### 1. `BadRequestException` 클래스
+```java
+@Getter
+public class BadRequestException extends RuntimeException {
+
+    private final int code;
+    private final String message;
+
+    public BadRequestException(final ExceptionCode exceptionCode){
+        this.code = exceptionCode.getCode();
+        this.message = exceptionCode.getMessage();
+    }
+}
+```
+
+- 잘못된 요청이 발생했을 때 사용하는 **사용자 정의 예외 클래스**로, 예외 코드와 메시지를 포함하며 `ExceptionCode`와 연동됨
+
+### 2. `ExceptionCode` 열거형
+```java
+@RequiredArgsConstructor
+@Getter
+public enum ExceptionCode {
+
+    INVALID_REQUEST(1000, "올바르지 않은 요청입니다."),
+
+    // 멤버 에러
+    NOT_FOUND_MEMBER_ID(1001, "요청한 ID에 해당하는 멤버가 존재하지 않습니다."),
+    FAIL_TO_CREATE_NEW_MEMBER(1002, "새로운 멤버를 생성하는데 실패하였습니다."),
+
+    // 채팅 에러
+    NOT_FOUND_CHATROOM_ID(2001, "요청한 ID에 해당하는 채팅방이 존재하지 않습니다."),
+    INVALID_CHATROOM(2002, "존재하지 않는 채팅방입니다."),
+    VALID_CHATROOM(2003, "이미 존재하는 채팅방입니다."),
+
+    // 게시글 에러
+    NOT_FOUND_POST_ID(3001, "요청한 ID에 해당하는 게시글이 존재하지 않습니다."),
+    NOT_FOUND_POST_LIKE(3002, "요청한 ID에 해당하는 게시글 좋아요가 존재하지 않습니다."),
+
+    INTERNAL_SERVER_ERROR(9999, "서버 에러가 발생하였습니다. 관리자에게 문의해 주세요.");
+
+    private final int code;
+
+    private final String message;
+}
+```
+
+- 다양한 예외 상황에 대한 **코드와 메시지**를 관리
+- 코드와 메시지를 중앙에서 관리하기 떄문에 유지보수가 용이
+- 사전에 정의된 예외 코드와 메시지를 제공하여 예외 처리를 일관성 있게 유지하게 함
+
+### 3. `ExceptionResponse` 클래스
+```java
+@Getter
+@RequiredArgsConstructor
+public class ExceptionResponse {
+
+    private final int code;
+    private final String message;
+}
+```
+- 클라이언트에게 반환할 **예외 응답 객체**로, 예외 코드와 메시지를 클라이언트에게 전달
+
+### 4. `GlobalExceptionHandler` 클래스
+```java
+@RestControllerAdvice
+@Slf4j
+public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
+
+    @Override
+    protected ResponseEntity<Object> handleMethodArgumentNotValid(
+            final MethodArgumentNotValidException e,
+            final HttpHeaders headers,
+            final HttpStatusCode status,
+            final WebRequest request
+    ){
+        log.warn(e.getMessage(), e);
+
+        final String errorMessage = Objects.requireNonNull(e.getBindingResult().getFieldError()).getDefaultMessage();
+        return ResponseEntity.badRequest()
+                .body(new ExceptionResponse(INVALID_REQUEST.getCode(), errorMessage));
+    }
+
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<ExceptionResponse> handleBadRequestException(final BadRequestException e){
+        log.warn(e.getMessage(), e);
+
+        return ResponseEntity.badRequest()
+                .body(new ExceptionResponse(e.getCode(), e.getMessage()));
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ExceptionResponse> handleException(final Exception e){
+        log.error(e.getMessage(), e);
+
+        return ResponseEntity.internalServerError()
+                .body(new ExceptionResponse(INTERNAL_SERVER_ERROR.getCode(), INTERNAL_SERVER_ERROR.getMessage()));
+    }
+
+}
+```
+- **전역 예외 처리 클래스**
+- 다양한 예외를 처리하고 적절한 응답을 클라이언트에게 반환
+- 예외 처리 로직과 응답 포맷팅을 중앙에서 관리하기 때문에 유지보수가 용이
+
+### ✅ Service 코드에서는?
+```java
+// NOT_FOUND_MEMBER_ID(1001, "요청한 ID에 해당하는 멤버가 존재하지 않습니다."),
+// NOT_FOUND_POST_ID(3001, "요청한 ID에 해당하는 게시글이 존재하지 않습니다."),
+
+public Member findMemberById(Long memberId) {
+    return memberRepository.findById(memberId).orElseThrow(() -> new BadRequestException(NOT_FOUND_MEMBER_ID));
+}
+
+public Post findPostById(Long postId) {
+    return postRepository.findById(postId).orElseThrow(() -> new BadRequestException(NOT_FOUND_POST_ID));
+}
+```
+이와 같이, 예외 발생 시 구체적인 예외 메시지와 코드가 제공되기 때문에 문제를 정확히 파악하고 처리할 수 있다!
+
+
+<br />
+
+## 🤔 DTO에서 `record` 사용해보기
+
+### DTO에서 `record` 사용하면 좋은 이유
+
+- `record`는 **불변 객체**를 다루기 위한 설계로, 데이터를 단순히 전달하는 **DTO**에 적합
+- 자동으로 **생성자**, **getter**, `equals`, `hashCode`, `toString` 메서드를 제공
+- DTO는 데이터를 캡슐화하여 전송하는 객체이므로, `record`의 간결함과 불변성이 큰 장점
+
+### `record`의 특징
+
+- DTO의 필드만 정의하면 해당 필드를 포함하는 **생성자**, **getter** 등이 자동으로 제공
+- 필드 이름 자체가 getter 역할을 하므로 `getName()` 대신 **`name()`** 메서드를 사용
+- `record`의 필드는 기본적으로 `final`처럼 동작하기 때문에 객체 생성 후 값 변경 불가
+- `record` 를 선언할 때는 필요한 필드를 생성자 파라미터로 선언
+
+> - 단순한 데이터 전송의 경우 `record` 가 적합!
+> - 복잡한 로직이나 상속이 필요한 경우 `class` 가 적합!
+
+<br />
+
+
+### ✅`record`를 활용한 DTO
+```java
+public record PostReq(
+
+        @NotNull
+        String content,
+        int commentCount,
+        String location,
+        String music,
+        @NotNull
+        List<String> imageUrls
+) {
+        public Post toEntity(Member member) {
+
+                List<Image> images = this.imageUrls.stream()
+                        .map(imageUrl -> Image.builder()
+                                .imageUrl(imageUrl)
+                                .post(Post.builder().build())
+                                .build())
+                        .collect(Collectors.toList());
+
+                return Post.builder()
+                        .content(this.content)
+                        .commentCount(this.commentCount)
+                        .location(this.location)
+                        .music(this.music)
+                        .member(member)
+                        .images(images)
+                        .build();
+        }
+}
+```
+```java
+@Builder
+public record ChatroomRes (
+        Long chatroomId,
+        Long senderId,
+        Long receiverId
+) {
+    public static ChatroomRes of(Chatroom chatroom) {
+        return ChatroomRes.builder()
+                .chatroomId(chatroom.getId())
+                .senderId(chatroom.getSender().getId())
+                .receiverId(chatroom.getReceiver().getId())
+                .build();
+    }
+}
+```
+- `of`
+  - 주로 정적 팩토리 메서드로 사용되어 객체 생성을 나타냄
+  - 다른 객체로부터 새로운 객체를 생성할 때 사용됨
+
+
+- `toEntity`
+  - DTO를 엔티티로 변환할 때 사용함
+  - 변환 의도를 명확히 하고 싶을 때 사용됨
+
 

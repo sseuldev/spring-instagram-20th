@@ -44,25 +44,10 @@ public class PostService {
         Post post = request.toEntity(member);
         Post savePost = postRepository.save(post);
 
-        List<Image> images = convertToImageEntities(request.imageUrls(), savePost);
-        images.forEach(imageRepository::save);
+        List<Image> images = post.getImages();
+        imageRepository.saveAll(images);
 
         return PostRes.createPostRes(savePost);
-    }
-
-    /* 이미지 URL 리스트를 Image 엔티티로 변환 */
-    private List<Image> convertToImageEntities(List<String> imageUrls, Post post) {
-
-        if (imageUrls == null || imageUrls.isEmpty()) {
-            throw new BadRequestException(EMPTY_IMAGE);
-        }
-
-        return imageUrls.stream()
-                .map(imageUrl -> Image.builder()
-                        .imageUrl(imageUrl)
-                        .post(post)
-                        .build())
-                .collect(Collectors.toList());
     }
 
     /** [ 주요기능 ]

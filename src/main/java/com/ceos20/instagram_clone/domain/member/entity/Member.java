@@ -1,11 +1,14 @@
 package com.ceos20.instagram_clone.domain.member.entity;
 
 import com.ceos20.instagram_clone.domain.member.dto.request.MemberReq;
+import com.ceos20.instagram_clone.domain.post.entity.Post;
 import com.ceos20.instagram_clone.global.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -47,6 +50,10 @@ public class Member extends BaseEntity {
 
     @Column(name = "inactive_date", columnDefinition = "timestamp")
     private LocalDateTime inactiveDate;
+
+    @OneToMany(mappedBy = "member", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Post> posts = new ArrayList<>();
 
     public void update(MemberReq memberReq) {
         this.name = memberReq.name();

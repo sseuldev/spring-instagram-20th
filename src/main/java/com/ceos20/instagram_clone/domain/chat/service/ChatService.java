@@ -103,7 +103,7 @@ public class ChatService {
 
         Member member = findMemberById(memberId);
 
-        List<Chatroom> chatrooms = chatroomRepository.findAllByMember(member);
+        List<Chatroom> chatrooms = chatroomRepository.findAllBySenderOrReceiver(member, member);
 
         return chatrooms.stream()
                 .map(ChatroomRes::of)

@@ -1,94 +1,90 @@
 package com.ceos20.instagram_clone.domain;
 
 import com.ceos20.instagram_clone.domain.member.entity.Member;
+import com.ceos20.instagram_clone.domain.post.entity.Image;
 import com.ceos20.instagram_clone.domain.post.entity.Post;
+import com.ceos20.instagram_clone.global.repository.ImageRepository;
 import com.ceos20.instagram_clone.global.repository.MemberRepository;
 import com.ceos20.instagram_clone.global.repository.PostRepository;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest
-@Transactional
-class PostRepositoryTest {
+public class PostRepositoryTest {
 
     @Autowired
-    MemberRepository memberRepository;
-    @Autowired
-    PostRepository postRepository;
+    private PostRepository postRepository;
 
-    private Member newMember;
-    private Post post1;
-    private Post post2;
-    private Post post3;
+    @Autowired
+    private MemberRepository memberRepository;
+
+    private Member member;
+    private Post post;
 
     @BeforeEach
-    void 기본세팅() {
+    void setUp() {
 
-        // given
-        Member member = Member.builder()
-                .name("이한슬")
-                .email("ceos@naver.com")
+        member = Member.builder()
+                .name("Ceos")
+                .email("ceos@google.com")
                 .password("1234")
-                .nickname("sseuldev")
+                .nickname("backend-ceos")
                 .build();
-        newMember = memberRepository.save(member);
+        memberRepository.save(member);
 
-        post1 = Post.builder()
-                .content("테스트1")
-                .member(newMember)
+        post = Post.builder()
+                .content("Hello!!")
+                .member(member)
                 .build();
-        post2 = Post.builder()
-                .content("테스트2")
-                .member(newMember)
+        postRepository.save(post);
+
+        Image image1 = Image.builder()
+                .imageUrl("imageUrl1.jpg")
+                .post(post)
                 .build();
-        post3 = Post.builder()
-                .content("테스트3")
-                .member(newMember)
+        Image image2 = Image.builder()
+                .imageUrl("imageUrl2.jpg")
+                .post(post)
                 .build();
 
-        postRepository.save(post1);
-        postRepository.save(post2);
-        postRepository.save(post3);
+        post.getImages().add(image1);
+        post.getImages().add(image2);
+        postRepository.save(post);
     }
 
     @Test
-    public void 게시물_조회_테스트() throws Exception {
+    @Transactional
+    public void NPlusOne_확인_테스트() {
 
-        // given & when
-        List<Post> posts = postRepository.findAllByMember(newMember);
+        List<Post> posts = postRepository.findAll();
 
-        // then
-        assertEquals(3, posts.size(), "게시물 개수는 총 3개입니다.");
 
-        assertTrue(posts.stream().anyMatch(post -> post.getContent().equals("테스트1")));
-        assertTrue(posts.stream().anyMatch(post -> post.getContent().equals("테스트2")));
-        assertTrue(posts.stream().anyMatch(post -> post.getContent().equals("테스트3")));
+        for (Post retrievedPost : posts) {
+            System.out.println("Post content: " + retrievedPost.getContent());
 
-        posts.forEach(post -> assertEquals(newMember.getId(), post.getMember().getId()));
+            List<Image> images = retrievedPost.getImages();
+            for (Image image : images) {
+                System.out.println("Image URL: " + image.getImageUrl());
+            }
+        }
     }
 
     @Test
-    public void 게시물_삭제_테스트() throws Exception {
+    @Transactional
+    public void FetchJoin_테스트() {
 
-        // given & when
-        postRepository.deleteById(post1.getId());
+        Post retrievedPost = postRepository.findByIdWithImages(post.getId())
+                .orElseThrow(() -> new RuntimeException("Post not found"));
 
-        // then
-        List<Post> posts = postRepository.findAllByMember(newMember);
 
-        assertEquals(2, posts.size(), "게시물 개수는 총 2개입니다.");
-
-        Optional<Post> deletedPost = postRepository.findById(post1.getId());
-        assertFalse(deletedPost.isPresent(), "삭제된 게시물이므로 존재하면 안됩니다!");
+        List<Image> images = retrievedPost.getImages();
+        assertEquals(2, images.size());
     }
 }

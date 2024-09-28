@@ -14,23 +14,18 @@ import java.util.stream.Collectors;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record PostRes(
 
-        @NotNull
         Long postId,
 
-        @NotNull
         String content,
 
         String location,
 
         String music,
 
-        @NotNull
         Long memberId,
 
-        @NotNull
         List<String> imageUrls,
 
-        @NotNull
         int commentCount
 
 ) {
