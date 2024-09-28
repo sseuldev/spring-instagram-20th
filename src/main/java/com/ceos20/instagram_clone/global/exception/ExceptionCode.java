@@ -13,6 +13,10 @@ public enum ExceptionCode {
     NOT_FOUND_MEMBER_ID(1010, "요청한 ID에 해당하는 멤버가 존재하지 않습니다."),
     FAIL_TO_CREATE_NEW_MEMBER(1012, "새로운 멤버를 생성하는데 실패하였습니다."),
 
+    // 게시글 에러
+    NOT_FOUND_POST_ID(4001, "요청한 ID에 해당하는 게시글이 존재하지 않습니다."),
+    NOT_FOUND_POST_LIKE(4002, "요청한 ID에 해당하는 게시글 좋아요가 존재하지 않습니다."),
+
 
     // 이미지 에러
     EXCEED_IMAGE_CAPACITY(5001, "업로드 가능한 이미지 용량을 초과했습니다."),

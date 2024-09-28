@@ -1,5 +1,6 @@
 package com.ceos20.instagram_clone.domain.member.entity;
 
+import com.ceos20.instagram_clone.domain.member.dto.request.MemberReq;
 import com.ceos20.instagram_clone.global.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -8,6 +9,8 @@ import java.time.LocalDateTime;
 
 @Entity
 @Getter
+@Builder
+@AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Member extends BaseEntity {
 
@@ -39,20 +42,18 @@ public class Member extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 8)
-    private MemberStatus status;
+    @Builder.Default
+    private MemberStatus status = MemberStatus.ACTIVE;
 
     @Column(name = "inactive_date", columnDefinition = "timestamp")
     private LocalDateTime inactiveDate;
 
-    @Builder
-    public Member(String name, String email, String password, String nickname, String profileUrl, String introduce, String linkUrl) {
-        this.name = name;
-        this.email = email;
-        this.password = password;
-        this.nickname = nickname;
-        this.profileUrl = profileUrl;
-        this.introduce = introduce;
-        this.linkUrl = linkUrl;
-        this.status = MemberStatus.ACTIVE;
+    public void update(MemberReq memberReq) {
+        this.name = memberReq.name();
+        this.nickname = memberReq.nickname();
+        this.email = memberReq.email();
+        this.profileUrl = memberReq.profileUrl();
+        this.linkUrl = memberReq.linkUrl();
+        this.introduce = memberReq.introduce();
     }
 }

@@ -6,8 +6,13 @@ import com.ceos20.instagram_clone.global.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Getter
+@AllArgsConstructor
+@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Post extends BaseEntity {
 
@@ -20,7 +25,8 @@ public class Post extends BaseEntity {
     private String content;
 
     @Column(name = "comment_count")
-    private int commentCount;
+    @Builder.Default
+    private int commentCount = 0;
 
     @Column(length = 30)
     private String location;
@@ -31,12 +37,6 @@ public class Post extends BaseEntity {
     @JoinColumn(name = "member_id")
     private Member member;
 
-    @Builder
-    public Post(String content, String location, String music, Member member) {
-        this.content = content;
-        this.commentCount = 0;
-        this.location = location;
-        this.music = music;
-        this.member = member;
-    }
+    @OneToMany(mappedBy = "post")
+    private List<Image> images = new ArrayList<>();
 }
