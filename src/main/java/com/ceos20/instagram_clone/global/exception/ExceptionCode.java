@@ -10,13 +10,17 @@ public enum ExceptionCode {
     INVALID_REQUEST(1000, "올바르지 않은 요청입니다."),
 
     // 멤버 에러
-    NOT_FOUND_MEMBER_ID(1010, "요청한 ID에 해당하는 멤버가 존재하지 않습니다."),
-    FAIL_TO_CREATE_NEW_MEMBER(1012, "새로운 멤버를 생성하는데 실패하였습니다."),
+    NOT_FOUND_MEMBER_ID(1001, "요청한 ID에 해당하는 멤버가 존재하지 않습니다."),
+    FAIL_TO_CREATE_NEW_MEMBER(1002, "새로운 멤버를 생성하는데 실패하였습니다."),
+
+    // 채팅 에러
+    NOT_FOUND_CHATROOM_ID(2001, "요청한 ID에 해당하는 채팅방이 존재하지 않습니다."),
+    INVALID_CHATROOM(2002, "존재하지 않는 채팅방입니다."),
+    VALID_CHATROOM(2003, "이미 존재하는 채팅방입니다."),
 
     // 게시글 에러
-    NOT_FOUND_POST_ID(4001, "요청한 ID에 해당하는 게시글이 존재하지 않습니다."),
-    NOT_FOUND_POST_LIKE(4002, "요청한 ID에 해당하는 게시글 좋아요가 존재하지 않습니다."),
-
+    NOT_FOUND_POST_ID(3001, "요청한 ID에 해당하는 게시글이 존재하지 않습니다."),
+    NOT_FOUND_POST_LIKE(3002, "요청한 ID에 해당하는 게시글 좋아요가 존재하지 않습니다."),
 
     // 이미지 에러
     EXCEED_IMAGE_CAPACITY(5001, "업로드 가능한 이미지 용량을 초과했습니다."),
@@ -28,6 +32,11 @@ public enum ExceptionCode {
     FAIL_IMAGE_NAME_HASH(5102, "이미지 이름을 해싱하는 데 실패했습니다."),
     INVALID_IMAGE(5103, "올바르지 않은 이미지 파일입니다."),
 
+    // 댓글 에러
+    NOT_FOUND_COMMENT_ID(7001, "요청한 ID에 해당하는 댓글이 존재하지 않습니다."),
+    NOT_FOUND_PARENT_COMMENT_ID(7002, "요청한 ID에 해당하는 부모 댓글이 존재하지 않습니다."),
+
+
     INVALID_USER_NAME(8001, "존재하지 않는 사용자입니다."),
     INVALID_PASSWORD(8002, "비밀번호가 일치하지 않습니다."),
     NULL_ADMIN_AUTHORITY(8101, "잘못된 관리자 권한입니다."),
@@ -35,8 +44,6 @@ public enum ExceptionCode {
     NOT_FOUND_ADMIN_ID(8103, "요청한 ID에 해당하는 관리자를 찾을 수 없습니다."),
     INVALID_CURRENT_PASSWORD(8104, "현재 사용중인 비밀번호가 일치하지 않습니다."),
     INVALID_ADMIN_AUTHORITY(8201, "해당 관리자 기능에 대한 접근 권한이 없습니다."),
-
-    // 인증 에러
     INVALID_AUTHORIZATION_CODE(9001, "유효하지 않은 인증 코드입니다."),
     NOT_SUPPORTED_OAUTH_SERVICE(9002, "해당 OAuth 서비스는 제공하지 않습니다."),
     FAIL_TO_CONVERT_URL_PARAMETER(9003, "Url Parameter 변환 중 오류가 발생했습니다."),

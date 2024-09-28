@@ -25,7 +25,7 @@ public record PostReq(
         List<String> imageUrls
 
 ) {
-        public Post from(Member member) {
+        public Post toEntity(Member member) {
                 return Post.builder()
                         .content(this.content)
                         .commentCount(this.commentCount)

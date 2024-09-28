@@ -41,7 +41,7 @@ public class PostService {
 
         Member member = findMemberById(memberId);
 
-        Post post = request.from(member);
+        Post post = request.toEntity(member);
         Post savePost = postRepository.save(post);
 
         List<Image> images = convertToImageEntities(request.imageUrls(), savePost);
@@ -78,6 +78,7 @@ public class PostService {
     /** [ 주요기능 ]
      * 게시물 삭제
      * **/
+    @Transactional
     public void deletePost(Long postId) {
         
         Post post = findPostById(postId);
