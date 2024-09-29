@@ -5,6 +5,8 @@ import com.ceos20.instagram_clone.domain.post.entity.Post;
 import com.ceos20.instagram_clone.global.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -15,6 +17,8 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@SQLDelete(sql = "UPDATE member SET deleted_at = NOW() where id = ?")
+@Where(clause = "deleted_at IS NULL")
 public class Member extends BaseEntity {
 
     @Id

@@ -22,4 +22,7 @@ public abstract class BaseEntity {
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false, columnDefinition = "timestamp")
     private LocalDateTime modifiedAt;
+
+    @Column(name = "deleted_at", columnDefinition = "TIMESTAMP")
+    private LocalDateTime deletedAt;
 }
