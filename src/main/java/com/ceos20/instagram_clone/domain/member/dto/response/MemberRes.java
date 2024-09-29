@@ -13,13 +13,10 @@ import java.time.LocalDateTime;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record MemberRes(
 
-        @NotNull
         String name,
 
-        @NotNull
         String nickname,
 
-        @Email
         String email,
 
         String profileUrl,
@@ -28,7 +25,6 @@ public record MemberRes(
 
         String introduce,
 
-        @NotNull
         MemberStatus status,
 
         LocalDateTime inactiveDate

@@ -1,11 +1,13 @@
 package com.ceos20.instagram_clone.domain.chat.dto.response;
 
 import com.ceos20.instagram_clone.domain.chat.entity.Message;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
 
 import java.time.LocalDateTime;
 
 @Builder
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public record MessageRes (
         Long messageId,
         String content,

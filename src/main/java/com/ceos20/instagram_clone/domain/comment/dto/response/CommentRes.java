@@ -1,12 +1,14 @@
 package com.ceos20.instagram_clone.domain.comment.dto.response;
 
 import com.ceos20.instagram_clone.domain.comment.entity.Comment;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Builder
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public record CommentRes(
         Long commentId,
         String content,
