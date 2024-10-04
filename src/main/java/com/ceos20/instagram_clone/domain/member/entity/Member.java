@@ -1,6 +1,6 @@
 package com.ceos20.instagram_clone.domain.member.entity;
 
-import com.ceos20.instagram_clone.domain.member.dto.request.MemberReq;
+import com.ceos20.instagram_clone.domain.member.dto.request.MemberRequestDto;
 import com.ceos20.instagram_clone.domain.post.entity.Post;
 import com.ceos20.instagram_clone.global.common.BaseEntity;
 import jakarta.persistence.*;
@@ -18,7 +18,6 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @SQLDelete(sql = "UPDATE member SET deleted_at = NOW() where id = ?")
-@Where(clause = "deleted_at IS NULL")
 public class Member extends BaseEntity {
 
     @Id
@@ -59,7 +58,7 @@ public class Member extends BaseEntity {
     @Builder.Default
     private List<Post> posts = new ArrayList<>();
 
-    public void update(MemberReq memberReq) {
+    public void update(MemberRequestDto memberReq) {
         this.name = memberReq.name();
         this.nickname = memberReq.nickname();
         this.email = memberReq.email();

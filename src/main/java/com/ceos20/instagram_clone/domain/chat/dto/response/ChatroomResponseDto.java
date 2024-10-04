@@ -6,13 +6,13 @@ import lombok.Builder;
 
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public record ChatroomRes (
+public record ChatroomResponseDto(
         Long chatroomId,
         Long senderId,
         Long receiverId
 ) {
-    public static ChatroomRes of(Chatroom chatroom) {
-        return ChatroomRes.builder()
+    public static ChatroomResponseDto of(Chatroom chatroom) {
+        return ChatroomResponseDto.builder()
                 .chatroomId(chatroom.getId())
                 .senderId(chatroom.getSender().getId())
                 .receiverId(chatroom.getReceiver().getId())

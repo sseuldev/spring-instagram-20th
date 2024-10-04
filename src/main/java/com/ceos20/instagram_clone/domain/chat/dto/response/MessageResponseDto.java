@@ -8,15 +8,15 @@ import java.time.LocalDateTime;
 
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public record MessageRes (
+public record MessageResponseDto(
         Long messageId,
         String content,
         LocalDateTime sendTime,
         Long senderId,
         Long chatroomId
 ) {
-    public static MessageRes of(Message message) {
-        return MessageRes.builder()
+    public static MessageResponseDto of(Message message) {
+        return MessageResponseDto.builder()
                 .messageId(message.getId())
                 .content(message.getContent())
                 .sendTime(message.getSendTime())

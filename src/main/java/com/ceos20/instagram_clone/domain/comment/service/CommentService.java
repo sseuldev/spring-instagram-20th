@@ -1,7 +1,7 @@
 package com.ceos20.instagram_clone.domain.comment.service;
 
-import com.ceos20.instagram_clone.domain.comment.dto.request.CommentReq;
-import com.ceos20.instagram_clone.domain.comment.dto.response.CommentRes;
+import com.ceos20.instagram_clone.domain.comment.dto.request.CommentRequestDto;
+import com.ceos20.instagram_clone.domain.comment.dto.response.CommentResponseDto;
 import com.ceos20.instagram_clone.domain.comment.entity.Comment;
 import com.ceos20.instagram_clone.domain.member.entity.Member;
 import com.ceos20.instagram_clone.domain.post.entity.Post;
@@ -40,19 +40,18 @@ public class CommentService {
         return commentRepository.findById(commentId).orElseThrow(() -> new BadRequestException(NOT_FOUND_COMMENT_ID));
     }
 
-    /** [주요 기능 ]
+    /** [주요 기능]
      * 댓글 생성
      * **/
     @Transactional
-    public CommentRes createComment(CommentReq request) {
+    public CommentResponseDto createComment(CommentRequestDto request) {
 
         Post post = findPostById(request.postId());
         Member member = findMemberById(request.memberId());
 
         Comment parentComment = null;
         if (request.parentCommentId() != null) {
-            parentComment = commentRepository.findById(request.parentCommentId())
-                    .orElseThrow(() -> new BadRequestException(NOT_FOUND_PARENT_COMMENT_ID));
+            parentComment = findCommentById(request.parentCommentId());
         }
 
         Comment comment = request.toEntity(post, member, parentComment);
@@ -61,23 +60,17 @@ public class CommentService {
         post.updateCommentCount(post.getCommentCount() + 1);
         postRepository.save(post);
 
-        return CommentRes.createCommentRes(saveComment);
+        return CommentResponseDto.from(saveComment);
     }
 
     /** [주요 기능 ]
      * 댓글 조회
      * **/
-    public CommentRes getComment(Long commentId) {
+    public CommentResponseDto getComment(Long commentId) {
 
         Comment comment = findCommentById(commentId);
 
-        List<CommentRes> replies = comment.getReplies() != null
-                ? comment.getReplies().stream()
-                .map(CommentRes::createCommentRes)
-                .collect(Collectors.toList())
-                : new ArrayList<>();
-
-        return CommentRes.getCommentRes(comment, replies);
+        return CommentResponseDto.from(comment);
     }
 
     /** [주요 기능 ]

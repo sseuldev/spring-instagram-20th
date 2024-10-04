@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 
 @Builder
-public record ChatroomReq (
+public record ChatroomRequestDto(
         @NotNull Long senderId,
         @NotNull Long receiverId
 ) {

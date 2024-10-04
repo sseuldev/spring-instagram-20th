@@ -1,9 +1,9 @@
 package com.ceos20.instagram_clone.domain.chat.service;
 
-import com.ceos20.instagram_clone.domain.chat.dto.request.ChatroomReq;
-import com.ceos20.instagram_clone.domain.chat.dto.request.MessageReq;
-import com.ceos20.instagram_clone.domain.chat.dto.response.ChatroomRes;
-import com.ceos20.instagram_clone.domain.chat.dto.response.MessageRes;
+import com.ceos20.instagram_clone.domain.chat.dto.request.ChatroomRequestDto;
+import com.ceos20.instagram_clone.domain.chat.dto.request.MessageRequestDto;
+import com.ceos20.instagram_clone.domain.chat.dto.response.ChatroomResponseDto;
+import com.ceos20.instagram_clone.domain.chat.dto.response.MessageResponseDto;
 import com.ceos20.instagram_clone.domain.chat.entity.Chatroom;
 import com.ceos20.instagram_clone.domain.chat.entity.Message;
 import com.ceos20.instagram_clone.domain.member.entity.Member;
@@ -42,7 +42,7 @@ public class ChatService {
      * 채팅방 생성
      * **/
     @Transactional
-    public ChatroomRes createChatroom(ChatroomReq request) {
+    public ChatroomResponseDto createChatroom(ChatroomRequestDto request) {
 
         Member sender = findMemberById(request.senderId());
         Member receiver = findMemberById(request.receiverId());
@@ -53,39 +53,39 @@ public class ChatService {
         }
 
         Chatroom chatroom = chatroomRepository.save(request.toEntity(sender, receiver));
-        return ChatroomRes.of(chatroom);
+        return ChatroomResponseDto.of(chatroom);
     }
 
     /**
      * 메세지 전송
      * **/
     @Transactional
-    public MessageRes createMessage(MessageReq request) {
+    public MessageResponseDto createMessage(MessageRequestDto request) {
 
         Member sender = findMemberById(request.senderId());
         Chatroom chatroom = findChatroomById(request.chatroomId());
 
         Message message = messageRepository.save(request.toEntity(sender, chatroom));
-        return MessageRes.of(message);
+        return MessageResponseDto.of(message);
     }
 
     /**
      * 채팅방 내 디엠 조회
      * **/
-    public List<MessageRes> getMessageInChatroom(Long chatroomId) {
+    public List<MessageResponseDto> getMessageInChatroom(Long chatroomId) {
 
         Chatroom chatroom = findChatroomById(chatroomId);
         List<Message> messages = messageRepository.findAllByChatroom(chatroom);
 
         return messages.stream()
-                .map(MessageRes::of)
+                .map(MessageResponseDto::of)
                 .collect(Collectors.toList());
     }
 
     /**
      * 1:1 채팅방 조회
      * **/
-    public ChatroomRes getChatroom(Long senderId, Long receiverId) {
+    public ChatroomResponseDto getChatroom(Long senderId, Long receiverId) {
 
         Member sender = findMemberById(senderId);
         Member receiver = findMemberById(receiverId);
@@ -93,20 +93,20 @@ public class ChatService {
         Chatroom chatroom = chatroomRepository.findBySenderAndReceiver(sender, receiver)
                 .orElseThrow(() -> new BadRequestException(INVALID_CHATROOM));
 
-        return ChatroomRes.of(chatroom);
+        return ChatroomResponseDto.of(chatroom);
     }
 
     /**
      * 내가 참여한 모든 채팅방 리스트 조회
      * **/
-    public List<ChatroomRes> getMyChatroomList(Long memberId) {
+    public List<ChatroomResponseDto> getMyChatroomList(Long memberId) {
 
         Member member = findMemberById(memberId);
 
         List<Chatroom> chatrooms = chatroomRepository.findAllBySenderOrReceiver(member, member);
 
         return chatrooms.stream()
-                .map(ChatroomRes::of)
+                .map(ChatroomResponseDto::of)
                 .collect(Collectors.toList());
     }
 }

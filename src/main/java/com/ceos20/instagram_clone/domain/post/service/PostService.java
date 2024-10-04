@@ -1,8 +1,8 @@
 package com.ceos20.instagram_clone.domain.post.service;
 
 import com.ceos20.instagram_clone.domain.member.entity.Member;
-import com.ceos20.instagram_clone.domain.post.dto.request.PostReq;
-import com.ceos20.instagram_clone.domain.post.dto.response.PostRes;
+import com.ceos20.instagram_clone.domain.post.dto.request.PostRequestDto;
+import com.ceos20.instagram_clone.domain.post.dto.response.PostResponseDto;
 import com.ceos20.instagram_clone.domain.post.entity.Image;
 import com.ceos20.instagram_clone.domain.post.entity.Post;
 import com.ceos20.instagram_clone.global.exception.BadRequestException;
@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static com.ceos20.instagram_clone.global.exception.ExceptionCode.*;
 
@@ -37,27 +36,24 @@ public class PostService {
      * 게시물 생성 (게시글에 사진과 함께 글 작성하기)
      * **/
     @Transactional
-    public PostRes createPost(PostReq request, Long memberId) {
+    public PostResponseDto createPost(PostRequestDto request, Long memberId) {
 
         Member member = findMemberById(memberId);
 
         Post post = request.toEntity(member);
         Post savePost = postRepository.save(post);
 
-        List<Image> images = post.getImages();
-        imageRepository.saveAll(images);
-
-        return PostRes.createPostRes(savePost);
+        return PostResponseDto.createPostRes(savePost);
     }
 
     /** [ 주요기능 ]
      * 게시물 조회
      * **/
-    public PostRes getPost(Long postId) {
+    public PostResponseDto getPost(Long postId) {
 
         Post post = findPostById(postId);
 
-        return PostRes.getPostRes(post);
+        return PostResponseDto.getPostRes(post);
     }
 
     /** [ 주요기능 ]
