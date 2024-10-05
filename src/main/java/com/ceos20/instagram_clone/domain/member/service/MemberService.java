@@ -19,7 +19,7 @@ public class MemberService {
     private final MemberRepository memberRepository;
 
     public Member findMemberById(Long memberId) {
-        return memberRepository.findById(memberId).orElseThrow(() -> new BadRequestException(NOT_FOUND_MEMBER_ID));
+        return memberRepository.findByIdAndDeletedAtIsNull(memberId).orElseThrow(() -> new BadRequestException(NOT_FOUND_MEMBER_ID));
     }
 
     /**

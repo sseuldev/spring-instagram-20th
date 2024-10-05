@@ -23,6 +23,6 @@ public abstract class BaseEntity {
     @Column(name = "updated_at", nullable = false, columnDefinition = "timestamp")
     private LocalDateTime modifiedAt;
 
-    @Column(name = "deleted_at", columnDefinition = "TIMESTAMP")
+    @Column(name = "deleted_at", columnDefinition = "timestamp")
     private LocalDateTime deletedAt;
 }

@@ -25,11 +25,11 @@ public class PostService {
     private final MemberRepository memberRepository;
 
     public Member findMemberById(Long memberId) {
-        return memberRepository.findById(memberId).orElseThrow(() -> new BadRequestException(NOT_FOUND_MEMBER_ID));
+        return memberRepository.findByIdAndDeletedAtIsNull(memberId).orElseThrow(() -> new BadRequestException(NOT_FOUND_MEMBER_ID));
     }
 
     public Post findPostById(Long postId) {
-        return postRepository.findById(postId).orElseThrow(() -> new BadRequestException(NOT_FOUND_POST_ID));
+        return postRepository.findByIdAndDeletedAtIsNull(postId).orElseThrow(() -> new BadRequestException(NOT_FOUND_POST_ID));
     }
 
     /** [ 주요기능 ]
@@ -43,7 +43,7 @@ public class PostService {
         Post post = request.toEntity(member);
         Post savePost = postRepository.save(post);
 
-        return PostResponseDto.createPostRes(savePost);
+        return PostResponseDto.from(savePost);
     }
 
     /** [ 주요기능 ]
@@ -53,7 +53,7 @@ public class PostService {
 
         Post post = findPostById(postId);
 
-        return PostResponseDto.getPostRes(post);
+        return PostResponseDto.from(post);
     }
 
     /** [ 주요기능 ]

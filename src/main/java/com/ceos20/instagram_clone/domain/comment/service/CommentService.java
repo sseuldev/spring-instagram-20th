@@ -29,15 +29,15 @@ public class CommentService {
     private final MemberRepository memberRepository;
 
     public Member findMemberById(Long memberId) {
-        return memberRepository.findById(memberId).orElseThrow(() -> new BadRequestException(NOT_FOUND_MEMBER_ID));
+        return memberRepository.findByIdAndDeletedAtIsNull(memberId).orElseThrow(() -> new BadRequestException(NOT_FOUND_MEMBER_ID));
     }
 
     public Post findPostById(Long postId) {
-        return postRepository.findById(postId).orElseThrow(() -> new BadRequestException(NOT_FOUND_POST_ID));
+        return postRepository.findByIdAndDeletedAtIsNull(postId).orElseThrow(() -> new BadRequestException(NOT_FOUND_POST_ID));
     }
 
     public Comment findCommentById(Long commentId) {
-        return commentRepository.findById(commentId).orElseThrow(() -> new BadRequestException(NOT_FOUND_COMMENT_ID));
+        return commentRepository.findByIdAndDeletedAtIsNull(commentId).orElseThrow(() -> new BadRequestException(NOT_FOUND_COMMENT_ID));
     }
 
     /** [주요 기능]

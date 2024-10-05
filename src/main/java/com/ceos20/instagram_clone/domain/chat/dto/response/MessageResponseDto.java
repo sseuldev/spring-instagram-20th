@@ -15,7 +15,7 @@ public record MessageResponseDto(
         Long senderId,
         Long chatroomId
 ) {
-    public static MessageResponseDto of(Message message) {
+    public static MessageResponseDto from(Message message) {
         return MessageResponseDto.builder()
                 .messageId(message.getId())
                 .content(message.getContent())

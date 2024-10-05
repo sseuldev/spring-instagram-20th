@@ -11,7 +11,7 @@ public record ChatroomResponseDto(
         Long senderId,
         Long receiverId
 ) {
-    public static ChatroomResponseDto of(Chatroom chatroom) {
+    public static ChatroomResponseDto from(Chatroom chatroom) {
         return ChatroomResponseDto.builder()
                 .chatroomId(chatroom.getId())
                 .senderId(chatroom.getSender().getId())

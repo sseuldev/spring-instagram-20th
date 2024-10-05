@@ -31,11 +31,11 @@ public class ChatService {
     private final MemberRepository memberRepository;
 
     public Member findMemberById(Long memberId) {
-        return memberRepository.findById(memberId).orElseThrow(() -> new BadRequestException(NOT_FOUND_MEMBER_ID));
+        return memberRepository.findByIdAndDeletedAtIsNull(memberId).orElseThrow(() -> new BadRequestException(NOT_FOUND_MEMBER_ID));
     }
 
     public Chatroom findChatroomById(Long chatroomId) {
-        return chatroomRepository.findById(chatroomId).orElseThrow(() -> new BadRequestException(NOT_FOUND_CHATROOM_ID));
+        return chatroomRepository.findByIdAndDeletedAtIsNull(chatroomId).orElseThrow(() -> new BadRequestException(NOT_FOUND_CHATROOM_ID));
     }
 
     /**
@@ -47,13 +47,13 @@ public class ChatService {
         Member sender = findMemberById(request.senderId());
         Member receiver = findMemberById(request.receiverId());
 
-        Optional<Chatroom> existChatroom = chatroomRepository.findBySenderAndReceiver(sender, receiver);
+        Optional<Chatroom> existChatroom = chatroomRepository.findBySenderAndReceiverAndDeletedAtIsNull(sender, receiver);
         if (existChatroom.isPresent()) {
             throw new BadRequestException(VALID_CHATROOM);
         }
 
         Chatroom chatroom = chatroomRepository.save(request.toEntity(sender, receiver));
-        return ChatroomResponseDto.of(chatroom);
+        return ChatroomResponseDto.from(chatroom);
     }
 
     /**
@@ -66,7 +66,7 @@ public class ChatService {
         Chatroom chatroom = findChatroomById(request.chatroomId());
 
         Message message = messageRepository.save(request.toEntity(sender, chatroom));
-        return MessageResponseDto.of(message);
+        return MessageResponseDto.from(message);
     }
 
     /**
@@ -75,11 +75,11 @@ public class ChatService {
     public List<MessageResponseDto> getMessageInChatroom(Long chatroomId) {
 
         Chatroom chatroom = findChatroomById(chatroomId);
-        List<Message> messages = messageRepository.findAllByChatroom(chatroom);
+        List<Message> messages = messageRepository.findAllByChatroomAndDeletedAtIsNull(chatroom);
 
         return messages.stream()
-                .map(MessageResponseDto::of)
-                .collect(Collectors.toList());
+                .map(MessageResponseDto::from)
+                .toList();
     }
 
     /**
@@ -90,10 +90,10 @@ public class ChatService {
         Member sender = findMemberById(senderId);
         Member receiver = findMemberById(receiverId);
 
-        Chatroom chatroom = chatroomRepository.findBySenderAndReceiver(sender, receiver)
+        Chatroom chatroom = chatroomRepository.findBySenderAndReceiverAndDeletedAtIsNull(sender, receiver)
                 .orElseThrow(() -> new BadRequestException(INVALID_CHATROOM));
 
-        return ChatroomResponseDto.of(chatroom);
+        return ChatroomResponseDto.from(chatroom);
     }
 
     /**
@@ -103,10 +103,10 @@ public class ChatService {
 
         Member member = findMemberById(memberId);
 
-        List<Chatroom> chatrooms = chatroomRepository.findAllBySenderOrReceiver(member, member);
+        List<Chatroom> chatrooms = chatroomRepository.findAllBySenderOrReceiverAndDeletedAtIsNull(member, member);
 
         return chatrooms.stream()
-                .map(ChatroomResponseDto::of)
-                .collect(Collectors.toList());
+                .map(ChatroomResponseDto::from)
+                .toList();
     }
 }

@@ -13,6 +13,8 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     List<Post> findAllByMember(Member member);
 
-    @Query("SELECT p FROM Post p LEFT JOIN FETCH p.images WHERE p.id = :postId")
+    @Query("SELECT DISTINCT p FROM Post p LEFT JOIN FETCH p.images WHERE p.id = :postId")
     Optional<Post> findByIdWithImages(@Param("postId") Long postId);
+
+    Optional<Post> findByIdAndDeletedAtIsNull(Long postId);
 }
