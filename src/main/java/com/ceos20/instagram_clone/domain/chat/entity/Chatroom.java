@@ -7,8 +7,6 @@ import lombok.*;
 
 @Entity
 @Getter
-@AllArgsConstructor
-@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Chatroom extends BaseEntity {
 
@@ -24,4 +22,10 @@ public class Chatroom extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "receiver_id")
     private Member receiver;
+
+    @Builder
+    public Chatroom(Member sender, Member receiver) {
+        this.sender = sender;
+        this.receiver = receiver;
+    }
 }

@@ -7,8 +7,6 @@ import lombok.*;
 
 @Entity
 @Getter
-@AllArgsConstructor
-@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Postlike extends BaseEntity {
 
@@ -24,4 +22,10 @@ public class Postlike extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id")
     private Post post;
+
+    @Builder
+    public Postlike(Member member, Post post) {
+        this.member = member;
+        this.post = post;
+    }
 }

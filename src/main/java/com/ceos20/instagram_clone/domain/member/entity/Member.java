@@ -14,8 +14,6 @@ import java.util.List;
 
 @Entity
 @Getter
-@Builder
-@AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @SQLDelete(sql = "UPDATE member SET deleted_at = NOW() where id = ?")
 public class Member extends BaseEntity {
@@ -48,14 +46,12 @@ public class Member extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 8)
-    @Builder.Default
-    private MemberStatus status = MemberStatus.ACTIVE;
+    private MemberStatus status;
 
     @Column(name = "inactive_date", columnDefinition = "timestamp")
     private LocalDateTime inactiveDate;
 
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
     private List<Post> posts = new ArrayList<>();
 
     public void update(MemberRequestDto memberReq) {
@@ -65,5 +61,18 @@ public class Member extends BaseEntity {
         this.profileUrl = memberReq.profileUrl();
         this.linkUrl = memberReq.linkUrl();
         this.introduce = memberReq.introduce();
+    }
+
+    @Builder
+    public Member(String name, String email, String password, String nickname, String profileUrl, String introduce, String linkUrl, String status, LocalDateTime inactiveDate) {
+        this.name = name;
+        this.email = email;
+        this.password = password;
+        this.nickname = nickname;
+        this.profileUrl = profileUrl;
+        this.introduce = introduce;
+        this.linkUrl = linkUrl;
+        this.status = (status == null || status.isEmpty()) ? MemberStatus.ACTIVE : MemberStatus.valueOf(status);
+        this.inactiveDate = inactiveDate;
     }
 }

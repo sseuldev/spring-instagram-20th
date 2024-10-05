@@ -17,7 +17,6 @@ public record MessageRequestDto(
     public Message toEntity(Member sender, Chatroom chatroom) {
         return Message.builder()
                 .content(content)
-                .sendTime(LocalDateTime.now())
                 .sender(sender)
                 .chatroom(chatroom)
                 .build();

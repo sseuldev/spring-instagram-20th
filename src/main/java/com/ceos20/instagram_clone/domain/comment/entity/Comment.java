@@ -11,8 +11,6 @@ import java.util.List;
 
 @Entity
 @Getter
-@Builder
-@AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Comment extends BaseEntity {
 
@@ -25,8 +23,7 @@ public class Comment extends BaseEntity {
     private String content;
 
     @Column(nullable = false)
-    @Builder.Default
-    private int likes = 0;
+    private int likes;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id")
@@ -41,6 +38,14 @@ public class Comment extends BaseEntity {
     private Comment parentComment;
 
     @OneToMany(mappedBy = "parentComment", cascade = CascadeType.ALL)
-    @Builder.Default
     private List<Comment> replies = new ArrayList<>();
+
+    @Builder
+    public Comment(String content, int likes, Post post, Member member, Comment parentComment) {
+        this.content = content;
+        this.likes = 0;
+        this.post = post;
+        this.member = member;
+        this.parentComment = parentComment;
+    }
 }

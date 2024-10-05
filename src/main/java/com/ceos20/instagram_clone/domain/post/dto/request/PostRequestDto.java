@@ -22,7 +22,6 @@ public record PostRequestDto(
 
                 Post post = Post.builder()
                         .content(this.content)
-                        .commentCount(this.commentCount)
                         .location(this.location)
                         .music(this.music)
                         .member(member)
