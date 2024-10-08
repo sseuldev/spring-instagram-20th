@@ -3,7 +3,7 @@ CEOS 20th BE study - instagram clone coding
 
 ---
 
-# 1. 도메인 및 ERD 분석
+# 1-1. 도메인 및 ERD 분석
 ![img.png](readme_img/erd.png)
 
 - 게시글 조회
@@ -218,7 +218,7 @@ private LocalDateTime createdAt;
 
 <br />
 
-# 2. Repository 단위 테스트
+# 1-2. Repository 단위 테스트
 ```java
 @SpringBootTest
 @Transactional
@@ -308,6 +308,368 @@ class PostRepositoryTest {
 
 - assertFalse(`조건`, `실패 시 출력되는 메시지`)
   : 주어진 조건이 거짓인지 확인
+
+
+<br />
+
+<br />
+
+# 2-1. 🌿지난주 코드 리팩토링🌿
+## ✏️ 회원 삭제 `Soft Delete` 로 구현하기!
+![image](https://github.com/user-attachments/assets/f905e593-3767-4c45-bca5-29f666b3efcd)
+
+### 1. `Hard Delete`란?
+- 물리적 삭제
+- 데이터를 실제로 삭제하는 방법
+- 삭제된 데이터는 시스템에서 완전히 제거되어 복구 불가
+
+### 2. `Soft Delete`란?
+- 논리적 삭제
+- 데이터를 실제로 삭제하지 않고, 삭제된 것처럼 보이게 함
+- 데이터는 시스템에서 더 이상 사용되지 않지만, 필요한 경우 되돌리기 가능
+- 데이터 보존을 위해 유용하며, 실수로 삭제된 데이터 복구 가능
+- 그러나! 삭제된 데이터 유지하려면 추가적인 저장 공간이 필요하기 때문에 신중하게 사용할 것,,
+
+#### 👉 회원의 경우
+- 탈퇴를 했다가 일주일 내로 다시 돌아올 가능성 존재
+- 회원에 대한 분석, 통계의 필요성
+- 탈퇴가 이루어진 경우에도, 다른 서비스나 비즈니스 로직에서 이 회원과 관련된 데이터에 접근 가능해야 함
+
+<br />
+
+이러한 이유들로 인해 `Member`에 대한 데이터 삭제의 경우는 `Soft Delete` 를 써야 한다!!
+
+### 3. `Soft Delete` 구현하기
+- 엔티티 삭제는 실제 `DELETE` 쿼리가 아니라, `UPDATE` 로 `deleted_at`에 현재 시간(`NOW()`)을 기록하는 것
+    > `@SqlDelete` 어노테이션으로 구현
+
+- 모든 SQL 쿼리에 `WHERE deleted_at IS NULL`을 붙여야만 삭제되지 않은 데이터에 대한 조회, 변경 작업 수행 가능
+    > `@Where` 어노테이션으로 구현
+
+<br />
+
+```java
+@SQLDelete(sql = "UPDATE member SET deleted_at = NOW() where id = ?")
+@Where(clause = "deleted_at IS NULL")
+public class Member extends BaseEntity {
+```
+
+#### 1. `@SQLDelete(sql = "UPDATE member SET deleted_at = NOW() where id = ?")`
+- 삭제 요청이 들어왔을 때 실행되는 SQL 구문 정의 => `UPDATE` 실행
+- 데이터는 삭제되지 않고, **삭제된 상태** 로 표시 됨
+
+#### 2. `@Where(clause = "deleted_at IS NULL")`
+- `deleted_at`이 `NULL`인, 즉 삭제되지 않은 레코드만 조회되게 함
+- 삭제된 레코드는 조회되지 않음
+
+<br />
+
+## ✏️ `@Builder.Default` 추가하기!
+#### * 원래 하던 방식
+```java
+@Column(name = "comment_count")
+private int commentCount = 0;
+```
+
+#### * `@Builder.Default` 이용한 방식
+
+```java
+@Column(name = "comment_count")
+@Builder.Default
+private int commentCount = 0;
+```
+
+<br />
+
+내가 원래 하던 방식으로 할 경우,
+
+`Builder` 패턴에서 기본값을 직접 설정하지 않는다면 0이 아닌 값으로 설정될 여지가 있다고 한다
+
+프로그램 전체에 `Builder` 패턴을 사용했기 때문에 내가 초기화한 기본값이 확실히 보장되는 `@Builder.Default` 을 이용하는 것이 더 나은 방식!!
+
+추가적으로, 엔티티의 `new ArrayList<>()`에도 마찬가지로 `@Builder.Default`를 적용해주었다.
+
+`@Builder.Default`를 사용하지 않으면 null 상태의 리스트에 접근하게 되어 에러가 발생하기 때문이다!!!
+
+#### ❗ `@Builder.Default` 없이 Builder를 사용해 객체를 생성한다면,,
+필드는 초기화되지 않고 null 상태로 남게된다. 이 상태에서 접근을 시도한다면, `NullPointerException` 이 터지게 된다..
+
+따라서, `@OneToMany` 관계에서 `List<Post> posts = new ArrayList<>()` 와 같은 컬렉션 타입 필드를 사용하는 경우에는 기본적으로 해당 필드에 빈 컬렉션을 할당해줘야한다.
+
+# 2-2. Service 코드 구현
+## 🤔 예외 처리란?
+코드 내 (주로 `Service` 코드) 에서 발생하는 오류를 체계적이고 일관되게 관리하기 위해서 **예외처리구조** 를 도입한다고 한다.
+
+예외처리구조를 위해서는 총 4가지 파일이 요구된다. 
+
+### 1. `BadRequestException` 클래스
+```java
+@Getter
+public class BadRequestException extends RuntimeException {
+
+    private final int code;
+    private final String message;
+
+    public BadRequestException(final ExceptionCode exceptionCode){
+        this.code = exceptionCode.getCode();
+        this.message = exceptionCode.getMessage();
+    }
+}
+```
+
+- 잘못된 요청이 발생했을 때 사용하는 **사용자 정의 예외 클래스**
+- 예외 코드와 메시지를 포함하며 `ExceptionCode`와 연동됨
+
+### 2. `ExceptionCode` 열거형
+```java
+@RequiredArgsConstructor
+@Getter
+public enum ExceptionCode {
+
+    INVALID_REQUEST(1000, "올바르지 않은 요청입니다."),
+
+    // 멤버 에러
+    NOT_FOUND_MEMBER_ID(1001, "요청한 ID에 해당하는 멤버가 존재하지 않습니다."),
+    FAIL_TO_CREATE_NEW_MEMBER(1002, "새로운 멤버를 생성하는데 실패하였습니다."),
+
+    // 채팅 에러
+    NOT_FOUND_CHATROOM_ID(2001, "요청한 ID에 해당하는 채팅방이 존재하지 않습니다."),
+    INVALID_CHATROOM(2002, "존재하지 않는 채팅방입니다."),
+    VALID_CHATROOM(2003, "이미 존재하는 채팅방입니다."),
+
+    // 게시글 에러
+    NOT_FOUND_POST_ID(3001, "요청한 ID에 해당하는 게시글이 존재하지 않습니다."),
+    NOT_FOUND_POST_LIKE(3002, "요청한 ID에 해당하는 게시글 좋아요가 존재하지 않습니다."),
+
+    INTERNAL_SERVER_ERROR(9999, "서버 에러가 발생하였습니다. 관리자에게 문의해 주세요.");
+
+    private final int code;
+
+    private final String message;
+}
+```
+
+- 다양한 예외 상황에 대한 **코드와 메시지**를 관리
+- 코드와 메시지를 중앙에서 관리하기 떄문에 유지보수가 용이
+- 사전에 정의된 예외 코드와 메시지를 제공하여 예외 처리를 일관성 있게 유지하게 함
+
+### 3. `ExceptionResponse` 클래스
+```java
+@Getter
+@RequiredArgsConstructor
+public class ExceptionResponse {
+
+    private final int code;
+    private final String message;
+}
+```
+- 클라이언트에게 반환할 **예외 응답 객체**
+- 예외 코드와 메시지를 클라이언트에게 전달
+
+### 4. `GlobalExceptionHandler` 클래스
+```java
+@RestControllerAdvice
+@Slf4j
+public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
+
+    @Override
+    protected ResponseEntity<Object> handleMethodArgumentNotValid(
+            final MethodArgumentNotValidException e,
+            final HttpHeaders headers,
+            final HttpStatusCode status,
+            final WebRequest request
+    ){
+        log.warn(e.getMessage(), e);
+
+        final String errorMessage = Objects.requireNonNull(e.getBindingResult().getFieldError()).getDefaultMessage();
+        return ResponseEntity.badRequest()
+                .body(new ExceptionResponse(INVALID_REQUEST.getCode(), errorMessage));
+    }
+
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<ExceptionResponse> handleBadRequestException(final BadRequestException e){
+        log.warn(e.getMessage(), e);
+
+        return ResponseEntity.badRequest()
+                .body(new ExceptionResponse(e.getCode(), e.getMessage()));
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ExceptionResponse> handleException(final Exception e){
+        log.error(e.getMessage(), e);
+
+        return ResponseEntity.internalServerError()
+                .body(new ExceptionResponse(INTERNAL_SERVER_ERROR.getCode(), INTERNAL_SERVER_ERROR.getMessage()));
+    }
+
+}
+```
+- **전역 예외 처리 클래스**
+- 다양한 예외를 처리하고 적절한 응답을 클라이언트에게 반환
+- 예외 처리 로직과 응답 포맷팅을 중앙에서 관리하기 때문에 유지보수가 용이
+- 예외가 발생하면 `handleException` 메서드에서 정의한 응답 형식대로 클라이언트에게 반환됨
+
+### ✅ Service 코드에서는?
+```java
+// NOT_FOUND_MEMBER_ID(1001, "요청한 ID에 해당하는 멤버가 존재하지 않습니다."),
+// NOT_FOUND_POST_ID(3001, "요청한 ID에 해당하는 게시글이 존재하지 않습니다."),
+
+public Member findMemberById(Long memberId) {
+    return memberRepository.findById(memberId).orElseThrow(() -> new BadRequestException(NOT_FOUND_MEMBER_ID));
+}
+
+public Post findPostById(Long postId) {
+    return postRepository.findById(postId).orElseThrow(() -> new BadRequestException(NOT_FOUND_POST_ID));
+}
+```
+이와 같이, 예외 발생 시 구체적인 예외 메시지와 코드가 제공되기 때문에 문제를 정확히 파악하고 처리할 수 있다!
+
+**[ 클라이언트가 받게 되는 오류정보 예시 ]**
+```java
+{
+  "code": 1001,
+  "message": "요청한 ID에 해당하는 멤버가 존재하지 않습니다."
+}
+```
+
+
+<br />
+
+## 🤔 DTO에서 `record` 사용해보기
+
+`Service` 코드를 작성하며 항상 드는 생각이..
+
+- `Service` 코드에는 비즈니스 로직만 담고 깔끔하게 하고 싶다!
+- `DTO` 를 더 효율적으로 잘 써보고 싶다!!
+
+였다. 기존에 작성했던 나의 `Service` 코드를 보면..
+
+```java
+public MemberEditInfoResponseDto getMemberEditInfo(Long memberId) {
+
+    Member member = findMemberById(memberId);
+
+    return MemberEditInfoResponseDto.builder()
+            .imageUrl(member.getImageUrl())
+            .name(member.getName())
+            .email(member.getEmail())
+            .phoneNumber(member.getPhoneNumber())
+            .insuranceId(member.getInsurance().getInsuranceId())
+            .build();
+}
+```
+
+![image](https://github.com/user-attachments/assets/eb6f2777-c49c-412c-b13b-33821a8a4395)
+
+일단, `return` 값에 빌더가 들어가있기 때문에 비즈니스 로직의 가독성이 떨어지고 복잡해보인다.
+
+`DTO` 의 경우, 사용하는 인스턴스들이 겹침에도 불구하고 모든 `DTO` 파일을 기능에 따라 하나하나씩 다 만들어놓은 것을 볼 수 있다. 
+
+#### 💡 `Service` 코드의 builder를 없애고 `Validation - Business Logic - Response` 에 집중해서 코드의 가독성을 높이자!
+
+#### 💡 쓰이는 인스턴스가 비슷한 `DTO`들은 하나의 파일 안에 넣고, `DTO` 안에 builder를 넣어보자!
+
+이러한 이유들로 더 나은 `DTO` 작성방식에 대해 알아보다가 `record` 를 활용한 `DTO`에 대해 알게 되었다!
+
+### DTO에서 `record` 사용하면 좋은 이유
+
+- `record`는 본래 데이터 전달을 위한 단순한 구조체 역할을 하기 위해 설계된 것
+- **불변 객체**를 다루기 위해 만들어졌기 때문에 데이터를 단순히 전달하는 **DTO**에 적합
+- 자동으로 **생성자**, **getter**, `equals`, `hashCode`, `toString` 메서드를 제공
+- `DTO`는 데이터를 캡슐화하여 전송하는 객체이므로, `record`의 간결함과 불변성이 큰 장점
+
+### `record`의 특징
+
+- `DTO`의 필드만 정의하면 해당 필드를 포함하는 **생성자**, **getter** 등이 자동으로 제공
+- 필드 이름 자체가 getter 역할을 하므로 `getName()` 대신 **`name()`** 메서드를 사용
+- `record`의 필드는 기본적으로 `final`처럼 동작하기 때문에 객체 생성 후 값 변경 불가
+- `record` 를 선언할 때는 필요한 필드를 생성자 파라미터로 선언
+
+> - 단순한 데이터 전송의 경우 `record` 가 적합!
+> - 복잡한 로직이나 상속이 필요한 경우 `class` 가 적합!
+
+<br />
+
+
+### ✅`record`를 활용한 DTO
+```java
+public record PostReq(
+
+        @NotNull
+        String content,
+        int commentCount,
+        String location,
+        String music,
+        @NotNull
+        List<String> imageUrls
+) {
+        public Post toEntity(Member member) {
+
+                List<Image> images = this.imageUrls.stream()
+                        .map(imageUrl -> Image.builder()
+                                .imageUrl(imageUrl)
+                                .post(Post.builder().build())
+                                .build())
+                        .collect(Collectors.toList());
+
+                return Post.builder()
+                        .content(this.content)
+                        .commentCount(this.commentCount)
+                        .location(this.location)
+                        .music(this.music)
+                        .member(member)
+                        .images(images)
+                        .build();
+        }
+}
+```
+```java
+@Builder
+public record ChatroomRes (
+        Long chatroomId,
+        Long senderId,
+        Long receiverId
+) {
+    public static ChatroomRes of(Chatroom chatroom) {
+        return ChatroomRes.builder()
+                .chatroomId(chatroom.getId())
+                .senderId(chatroom.getSender().getId())
+                .receiverId(chatroom.getReceiver().getId())
+                .build();
+    }
+}
+```
+- `of`
+  - 주로 정적 팩토리 메서드로 사용되어 객체 생성을 나타냄
+  - 다른 객체로부터 새로운 객체를 생성할 때 사용됨
+
+
+- `toEntity`
+  - DTO를 엔티티로 변환할 때 사용함
+  - 변환 의도를 명확히 하고 싶을 때 사용됨
+
+> 원래 `record`를 활용한 방식에는 불변성을 살리기 위해 `builer` 보다는 `new` 를 사용한다고 한다. 추후 코드 리팩토링을 하면서 수정해봐야겠다!
+
+<br />
+
+**[ 회원 정보 수정에 대한 서비스 코드 ]**
+```java
+@Transactional
+public MemberRes updateMemberInfo(MemberReq request, Long memberId) {
+
+    // Validation
+    Member member = findMemberById(memberId);
+
+    // Business Logic
+    member.update(request);
+    Member saveMember = memberRepository.save(member);
+
+    // Response
+    return MemberRes.MemberEditRes(saveMember);
+}
+```
+
+그 이전보다 비즈니스 로직이 더 잘 보이고 가독성있게 작성됐다는 것을 확인할 수 있다!
 
 
 

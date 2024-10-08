@@ -1,14 +1,24 @@
 package com.ceos20.instagram_clone.domain.member.entity;
 
+import com.ceos20.instagram_clone.domain.member.dto.request.MemberReq;
+import com.ceos20.instagram_clone.domain.post.entity.Post;
 import com.ceos20.instagram_clone.global.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
+@Builder
+@AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@SQLDelete(sql = "UPDATE member SET deleted_at = NOW() where id = ?")
+@Where(clause = "deleted_at IS NULL")
 public class Member extends BaseEntity {
 
     @Id
@@ -39,20 +49,22 @@ public class Member extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 8)
-    private MemberStatus status;
+    @Builder.Default
+    private MemberStatus status = MemberStatus.ACTIVE;
 
     @Column(name = "inactive_date", columnDefinition = "timestamp")
     private LocalDateTime inactiveDate;
 
-    @Builder
-    public Member(String name, String email, String password, String nickname, String profileUrl, String introduce, String linkUrl) {
-        this.name = name;
-        this.email = email;
-        this.password = password;
-        this.nickname = nickname;
-        this.profileUrl = profileUrl;
-        this.introduce = introduce;
-        this.linkUrl = linkUrl;
-        this.status = MemberStatus.ACTIVE;
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Post> posts = new ArrayList<>();
+
+    public void update(MemberReq memberReq) {
+        this.name = memberReq.name();
+        this.nickname = memberReq.nickname();
+        this.email = memberReq.email();
+        this.profileUrl = memberReq.profileUrl();
+        this.linkUrl = memberReq.linkUrl();
+        this.introduce = memberReq.introduce();
     }
 }

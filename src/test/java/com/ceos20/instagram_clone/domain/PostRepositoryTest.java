@@ -1,93 +1,117 @@
 package com.ceos20.instagram_clone.domain;
 
 import com.ceos20.instagram_clone.domain.member.entity.Member;
+import com.ceos20.instagram_clone.domain.post.entity.Image;
 import com.ceos20.instagram_clone.domain.post.entity.Post;
+import com.ceos20.instagram_clone.global.repository.ImageRepository;
 import com.ceos20.instagram_clone.global.repository.MemberRepository;
 import com.ceos20.instagram_clone.global.repository.PostRepository;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest
 @Transactional
-class PostRepositoryTest {
+public class PostRepositoryTest {
+
+    private final PostRepository postRepository;
+    private final EntityManager em;
 
     @Autowired
-    MemberRepository memberRepository;
-    @Autowired
-    PostRepository postRepository;
+    public PostRepositoryTest(PostRepository postRepository, EntityManager em) {
+        this.postRepository = postRepository;
+        this.em = em;
+    }
 
-    private Member newMember;
-    private Post post1;
-    private Post post2;
-    private Post post3;
+    Member member;
+
+    Post post1;
+    Post post2;
 
     @BeforeEach
-    void 기본세팅() {
-
-        // given
-        Member member = Member.builder()
-                .name("이한슬")
-                .email("ceos@naver.com")
+    void setUp() {
+        member = Member.builder()
+                .name("Ceos")
+                .email("ceos@google.com")
                 .password("1234")
-                .nickname("sseuldev")
+                .nickname("backend-ceos")
                 .build();
-        newMember = memberRepository.save(member);
+        em.persist(member);
 
         post1 = Post.builder()
-                .content("테스트1")
-                .member(newMember)
+                .content("Hello!!")
+                .member(member)
                 .build();
+        em.persist(post1);
+
         post2 = Post.builder()
-                .content("테스트2")
-                .member(newMember)
+                .content("Hi!!")
+                .member(member)
                 .build();
-        post3 = Post.builder()
-                .content("테스트3")
-                .member(newMember)
+        em.persist(post2);
+
+        Image image1 = Image.builder()
+                .imageUrl("imageUrl1.jpg")
+                .post(post1)
+                .build();
+        Image image2 = Image.builder()
+                .imageUrl("imageUrl2.jpg")
+                .post(post1)
+                .build();
+        Image image3 = Image.builder()
+                .imageUrl("imageUrl3.jpg")
+                .post(post2)
                 .build();
 
-        postRepository.save(post1);
-        postRepository.save(post2);
-        postRepository.save(post3);
+        post1.getImages().add(image1);
+        post1.getImages().add(image2);
+        post2.getImages().add(image3);
+
+        em.persist(image1);
+        em.persist(image2);
+        em.persist(image3);
+
+        em.flush();
+        em.clear();
     }
 
+    // 1번의 Post 조회 쿼리 후, 각 Post에 연결된 N개의 Image를 조회하기 위해 추가 쿼리들이 실행
     @Test
-    public void 게시물_조회_테스트() throws Exception {
+    @Transactional
+    public void NPlusOne_확인_테스트() {
 
-        // given & when
-        List<Post> posts = postRepository.findAllByMember(newMember);
+        List<Post> posts = postRepository.findAll();
 
-        // then
-        assertEquals(3, posts.size(), "게시물 개수는 총 3개입니다.");
+        for (Post post : posts) {
+            System.out.println("Post content: " + post.getContent());
 
-        assertTrue(posts.stream().anyMatch(post -> post.getContent().equals("테스트1")));
-        assertTrue(posts.stream().anyMatch(post -> post.getContent().equals("테스트2")));
-        assertTrue(posts.stream().anyMatch(post -> post.getContent().equals("테스트3")));
+            // N + 1 발생 구간
+            List<Image> images = post.getImages();
 
-        posts.forEach(post -> assertEquals(newMember.getId(), post.getMember().getId()));
+            for (Image image : images) {
+                System.out.println("Image URL: " + image.getImageUrl());
+            }
+        }
     }
 
+    // left join 을 사용하여 image 테이블을 조인
+    // 게시글에 속한 이미지를 함께 조회
     @Test
-    public void 게시물_삭제_테스트() throws Exception {
+    @Transactional
+    public void FetchJoin_테스트() {
 
-        // given & when
-        postRepository.deleteById(post1.getId());
+        Post post = postRepository.findByIdWithImages(post1.getId())
+                .orElseThrow(() -> new RuntimeException("Post not found"));
 
-        // then
-        List<Post> posts = postRepository.findAllByMember(newMember);
+        List<Image> images = post.getImages();
 
-        assertEquals(2, posts.size(), "게시물 개수는 총 2개입니다.");
-
-        Optional<Post> deletedPost = postRepository.findById(post1.getId());
-        assertFalse(deletedPost.isPresent(), "삭제된 게시물이므로 존재하면 안됩니다!");
+        assertEquals(2, images.size());
     }
 }
