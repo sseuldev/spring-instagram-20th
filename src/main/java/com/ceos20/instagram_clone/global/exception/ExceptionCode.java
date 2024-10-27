@@ -22,6 +22,10 @@ public enum ExceptionCode {
     NOT_FOUND_POST_ID(3001, "요청한 ID에 해당하는 게시글이 존재하지 않습니다."),
     NOT_FOUND_POST_LIKE(3002, "요청한 ID에 해당하는 게시글 좋아요가 존재하지 않습니다."),
 
+    // 해시태그 에러
+    VALID_HASHTAG(4001, "이미 존재하는 해시태그입니다."),
+    INVALID_HASHTAG(4002, "존재하지 않는 해시태크입니다."),
+
     // 이미지 에러
     EXCEED_IMAGE_CAPACITY(5001, "업로드 가능한 이미지 용량을 초과했습니다."),
     NULL_IMAGE(5002, "업로드한 이미지 파일이 NULL입니다."),

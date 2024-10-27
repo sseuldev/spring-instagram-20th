@@ -6,8 +6,6 @@ import lombok.*;
 
 @Entity
 @Getter
-@AllArgsConstructor
-@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Hashtag extends BaseEntity {
 
@@ -18,4 +16,17 @@ public class Hashtag extends BaseEntity {
 
     @Column(length = 20, nullable = false)
     private String name;
+
+    @Column(nullable = false)
+    private int hashtagCount;
+
+    public void increaseCount() {
+        this.hashtagCount++;
+    }
+
+    @Builder
+    public Hashtag(String name) {
+        this.name = name;
+        this.hashtagCount = 0;
+    }
 }
