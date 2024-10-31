@@ -21,7 +21,7 @@ import static com.ceos20.instagram_clone.global.exception.ExceptionCode.*;
 public class PostService {
 
     private final PostRepository postRepository;
-    private final ImageRepository imageRepository;
+    private final PostlikeRepository postlikeRepository;
     private final MemberRepository memberRepository;
 
     public Member findMemberById(Long memberId) {
@@ -57,12 +57,26 @@ public class PostService {
     }
 
     /** [ 주요기능 ]
+     * 전체 게시물 조회
+     * **/
+    public List<PostResponseDto> getAllPosts(Long memberId) {
+
+        Member member = findMemberById(memberId);
+        List<Post> posts = postRepository.findAllByMemberAndDeletedAtIsNull(member);
+
+        return posts.stream()
+                .map(PostResponseDto::from)
+                .toList();
+    }
+
+    /** [ 주요기능 ]
      * 게시물 삭제
      * **/
     @Transactional
     public void deletePost(Long postId) {
         
         Post post = findPostById(postId);
+        postlikeRepository.deleteByPostId(postId);
         
         postRepository.delete(post);
     }

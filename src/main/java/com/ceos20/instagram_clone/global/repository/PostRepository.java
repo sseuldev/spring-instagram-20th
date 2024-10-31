@@ -12,6 +12,7 @@ import java.util.Optional;
 public interface PostRepository extends JpaRepository<Post, Long> {
 
     List<Post> findAllByMember(Member member);
+    List<Post> findAllByMemberAndDeletedAtIsNull(Member member);
 
     @Query("SELECT DISTINCT p FROM Post p LEFT JOIN FETCH p.images WHERE p.id = :postId")
     Optional<Post> findByIdWithImages(@Param("postId") Long postId);

@@ -62,6 +62,5 @@ public enum ExceptionCode {
     INTERNAL_SERVER_ERROR(9999, "서버 에러가 발생하였습니다. 관리자에게 문의해 주세요.");
 
     private final int code;
-
     private final String message;
 }
