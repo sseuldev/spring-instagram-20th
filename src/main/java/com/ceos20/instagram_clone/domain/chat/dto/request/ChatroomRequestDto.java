@@ -7,8 +7,8 @@ import lombok.Builder;
 
 @Builder
 public record ChatroomRequestDto(
-        @NotNull Long senderId,
-        @NotNull Long receiverId
+        @NotNull Long receiverId,
+        String content
 ) {
     public Chatroom toEntity(Member sender, Member receiver) {
         return Chatroom.builder()

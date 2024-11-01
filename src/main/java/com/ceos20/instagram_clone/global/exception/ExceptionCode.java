@@ -17,6 +17,8 @@ public enum ExceptionCode {
     NOT_FOUND_CHATROOM_ID(2001, "요청한 ID에 해당하는 채팅방이 존재하지 않습니다."),
     INVALID_CHATROOM(2002, "존재하지 않는 채팅방입니다."),
     VALID_CHATROOM(2003, "이미 존재하는 채팅방입니다."),
+    INVALID_CHATROOM_AUTHORITY(2004, "해당 채팅방에 대한 접근 권한이 없습니다."),
+
 
     // 게시글 에러
     NOT_FOUND_POST_ID(3001, "요청한 ID에 해당하는 게시글이 존재하지 않습니다."),

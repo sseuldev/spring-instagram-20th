@@ -24,4 +24,5 @@ public record MessageResponseDto(
                 .chatroomId(message.getChatroom().getId())
                 .build();
     }
+
 }

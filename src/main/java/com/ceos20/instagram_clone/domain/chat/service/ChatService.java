@@ -42,9 +42,9 @@ public class ChatService {
      * 채팅방 생성
      * **/
     @Transactional
-    public ChatroomResponseDto createChatroom(ChatroomRequestDto request) {
+    public ChatroomResponseDto createChatroom(ChatroomRequestDto request, Long senderId) {
 
-        Member sender = findMemberById(request.senderId());
+        Member sender = findMemberById(senderId);
         Member receiver = findMemberById(request.receiverId());
 
         Optional<Chatroom> existChatroom = chatroomRepository.findBySenderAndReceiverAndDeletedAtIsNull(sender, receiver);
@@ -53,17 +53,21 @@ public class ChatService {
         }
 
         Chatroom chatroom = chatroomRepository.save(request.toEntity(sender, receiver));
-        return ChatroomResponseDto.from(chatroom);
+
+        MessageRequestDto message = new MessageRequestDto(request.content());
+        MessageResponseDto firstMessage = createMessage(message, chatroom.getId(), senderId);
+
+        return ChatroomResponseDto.from(chatroom, firstMessage);
     }
 
     /**
      * 메세지 전송
      * **/
     @Transactional
-    public MessageResponseDto createMessage(MessageRequestDto request) {
+    public MessageResponseDto createMessage(MessageRequestDto request, Long chatroomId, Long senderId) {
 
-        Member sender = findMemberById(request.senderId());
-        Chatroom chatroom = findChatroomById(request.chatroomId());
+        Member sender = findMemberById(senderId);
+        Chatroom chatroom = findChatroomById(chatroomId);
 
         Message message = messageRepository.save(request.toEntity(sender, chatroom));
         return MessageResponseDto.from(message);
@@ -72,10 +76,16 @@ public class ChatService {
     /**
      * 채팅방 내 디엠 조회
      * **/
-    public List<MessageResponseDto> getMessageInChatroom(Long chatroomId) {
+    public List<MessageResponseDto> getMessageInChatroom(Long chatroomId, Long memberId) {
 
         Chatroom chatroom = findChatroomById(chatroomId);
-        List<Message> messages = messageRepository.findAllByChatroomAndDeletedAtIsNull(chatroom);
+        Member member = findMemberById(memberId);
+
+        if (!chatroom.getSender().equals(member) && !chatroom.getReceiver().equals(member)) {
+            throw new BadRequestException(INVALID_CHATROOM_AUTHORITY);
+        }
+
+        List<Message> messages = messageRepository.findAllByChatroomAndDeletedAtIsNullOrderBySendTimeAsc(chatroom);
 
         return messages.stream()
                 .map(MessageResponseDto::from)
@@ -90,7 +100,10 @@ public class ChatService {
         Member sender = findMemberById(senderId);
         Member receiver = findMemberById(receiverId);
 
-        Chatroom chatroom = chatroomRepository.findBySenderAndReceiverAndDeletedAtIsNull(sender, receiver)
+//        Chatroom chatroom = chatroomRepository.findBySenderAndReceiverOrReceiverAndSender(sender, receiver, receiver, sender)
+//                .orElseThrow(() -> new BadRequestException(INVALID_CHATROOM));
+
+        Chatroom chatroom = chatroomRepository.findChatroomByMembers(sender, receiver)
                 .orElseThrow(() -> new BadRequestException(INVALID_CHATROOM));
 
         return ChatroomResponseDto.from(chatroom);
