@@ -28,11 +28,16 @@ public record CommentResponseDto(
                 .memberId(comment.getMember().getId())
                 .nickname(comment.getMember().getNickname())
                 .parentCommentId(comment.getParentComment() != null ? comment.getParentComment().getId() : null)
-                .replies(comment.getReplies() != null ?
-                        comment.getReplies().stream()
-                                .map(reply -> from(reply))
-                                .toList()
-                        : new ArrayList<>())
+                .replies(getReplies(comment))
                 .build();
+    }
+
+    private static List<CommentResponseDto> getReplies(Comment parentComment) {
+        return parentComment.getReplies() != null
+                ? parentComment.getReplies().stream()
+                .map(CommentResponseDto::from)
+                .filter(reply -> reply.parentCommentId != null) // 대댓글만 포함
+                .toList()
+                : new ArrayList<>();
     }
 }

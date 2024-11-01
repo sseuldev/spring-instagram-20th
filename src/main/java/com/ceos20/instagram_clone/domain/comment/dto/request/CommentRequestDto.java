@@ -6,8 +6,6 @@ import com.ceos20.instagram_clone.domain.post.entity.Post;
 import jakarta.validation.constraints.NotNull;
 
 public record CommentRequestDto(
-        @NotNull Long postId,
-        @NotNull Long memberId,
         @NotNull
         String content,
         Long parentCommentId

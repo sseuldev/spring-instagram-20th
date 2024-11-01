@@ -41,8 +41,7 @@ public class PostController {
 
     @Operation(summary = "게시글 작성", description = "게시글을 작성하는 API")
     @PostMapping("/{memberId}")
-    public CommonResponse<PostResponseDto> createPost(@Valid @RequestBody PostRequestDto request,
-                                                      @PathVariable Long memberId) {
+    public CommonResponse<PostResponseDto> createPost(@Valid @RequestBody PostRequestDto request, @PathVariable Long memberId) {
 
         return new CommonResponse<>(ResponseCode.SUCCESS, postService.createPost(request, memberId));
     }

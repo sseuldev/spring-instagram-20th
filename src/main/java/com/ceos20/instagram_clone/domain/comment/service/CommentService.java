@@ -44,10 +44,10 @@ public class CommentService {
      * 댓글 생성
      * **/
     @Transactional
-    public CommentResponseDto createComment(CommentRequestDto request) {
+    public CommentResponseDto createComment(CommentRequestDto request, Long postId, Long memberId) {
 
-        Post post = findPostById(request.postId());
-        Member member = findMemberById(request.memberId());
+        Post post = findPostById(postId);
+        Member member = findMemberById(memberId);
 
         Comment parentComment = null;
         if (request.parentCommentId() != null) {
@@ -74,13 +74,30 @@ public class CommentService {
     }
 
     /** [주요 기능 ]
+     * 게시물에 있는 전체 댓글 조회
+     * **/
+    public List<CommentResponseDto> getAllPostComment(Long postId) {
+
+        Post post = findPostById(postId);
+        List<Comment> comments = commentRepository.findAllByPostAndParentCommentIsNull(post);
+        return comments.stream()
+                .map(CommentResponseDto::from)
+                .toList();
+    }
+
+    /** [주요 기능 ]
      * 댓글 삭제
      * **/
     @Transactional
-    public void deleteComment(Long commentId) {
+    public void deleteComment(Long commentId, Long postId, Long memberId) {
 
         Comment comment = findCommentById(commentId);
-        Post post = comment.getPost();
+        Post post = findPostById(postId);
+        Member member = findMemberById(memberId);
+
+        if (!comment.getMember().equals(member)) {
+            throw new BadRequestException(INVALID_AUTHORITY);
+        }
 
         commentRepository.delete(comment);
 
