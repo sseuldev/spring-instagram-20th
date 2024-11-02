@@ -1,4 +1,4 @@
-package com.ceos20.instagram_clone.domain;
+package com.ceos20.instagram_clone.domain.post.service;
 
 import com.ceos20.instagram_clone.domain.member.entity.Member;
 import com.ceos20.instagram_clone.domain.post.dto.request.PostRequestDto;
@@ -47,7 +47,6 @@ public class PostServiceTest {
     void setUp() {
 
         member = Member.builder()
-                .id(1L)
                 .name("Ceos")
                 .email("ceos@google.com")
                 .nickname("Backend-ceos")
