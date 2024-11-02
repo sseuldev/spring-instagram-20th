@@ -100,9 +100,6 @@ public class ChatService {
         Member sender = findMemberById(senderId);
         Member receiver = findMemberById(receiverId);
 
-//        Chatroom chatroom = chatroomRepository.findBySenderAndReceiverOrReceiverAndSender(sender, receiver, receiver, sender)
-//                .orElseThrow(() -> new BadRequestException(INVALID_CHATROOM));
-
         Chatroom chatroom = chatroomRepository.findChatroomByMembers(sender, receiver)
                 .orElseThrow(() -> new BadRequestException(INVALID_CHATROOM));
 
