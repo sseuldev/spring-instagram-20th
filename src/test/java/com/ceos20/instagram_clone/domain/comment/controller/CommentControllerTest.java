@@ -51,7 +51,7 @@ class CommentControllerTest {
     public void setUp() {
 
         // Member 생성 및 저장
-        Member member = new Member("Ceos", "ceos@naver", null, "1234", "ceos-backend", "http://link.url", "안녕", null, "", null);
+        Member member = new Member("Ceos", "ceos@naver", "ROLE_ADMIN",null, "1234", "ceos-backend", "http://link.url", "안녕", null, "", null);
         memberRepository.save(member);
         memberId = member.getId();
 
