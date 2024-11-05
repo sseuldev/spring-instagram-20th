@@ -48,9 +48,9 @@ class ChatControllerTest {
     public void setUp() {
 
         // Sender 및 Receiver 멤버 생성 및 저장
-        Member sender = new Member("보내는애", "sender@naver", "0000", "보내는사람이야", "http://link.url", "", null, "", null);
-        Member receiver1 = new Member("받는애", "receiver@naver", "1234", "받는사람이야", "http://link.url", "", null, "", null);
-        Member receiver2 = new Member("받는애2", "receiver2@naver", "1234", "받는사람이야", "http://link.url", "", null, "", null);
+        Member sender = new Member("보내는애", "sender@naver", null, "0000", "보내는사람이야", "http://link.url", "", null, "", null);
+        Member receiver1 = new Member("받는애", "receiver@naver", null, "1234", "받는사람이야", "http://link.url", "", null, "", null);
+        Member receiver2 = new Member("받는애2", "receiver2@naver", null, "1234", "받는사람이야", "http://link.url", "", null, "", null);
         memberRepository.save(sender);
         memberRepository.save(receiver1);
         memberRepository.save(receiver2);
