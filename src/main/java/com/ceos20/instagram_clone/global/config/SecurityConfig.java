@@ -1,5 +1,6 @@
 package com.ceos20.instagram_clone.global.config;
 
+import com.ceos20.instagram_clone.global.jwt.JWTFilter;
 import com.ceos20.instagram_clone.global.jwt.JWTUtil;
 import com.ceos20.instagram_clone.global.jwt.LoginFilter;
 import com.ceos20.instagram_clone.global.repository.MemberRepository;
@@ -55,10 +56,13 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests((auth) -> auth
                         .requestMatchers("/login", "/", "/api/auth/signup", "/**").permitAll()
-                        .requestMatchers("/admin").hasRole("ADMIN")
+                        .requestMatchers("/api/auth/admin").hasRole("ADMIN")
                         .requestMatchers("/api/auth/reissue").permitAll()
                         .requestMatchers("/swagger-ui/**","/v3/api-docs/**").permitAll()
                         .anyRequest().authenticated());
+
+        http
+                .addFilterBefore(new JWTFilter(jwtUtil), LoginFilter.class);
 
         http
                 .addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil), UsernamePasswordAuthenticationFilter.class);
