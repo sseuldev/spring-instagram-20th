@@ -7,6 +7,9 @@ import jakarta.validation.constraints.Size;
 
 public record SignupRequestDto(
 
+        @NotNull(message = "성명은 필수 입력 사항입니다.")
+        String name,
+
         @NotNull(message = "사용자 이름은 필수 입력 사항입니다.")
         String nickname,
 

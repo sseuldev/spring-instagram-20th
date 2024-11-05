@@ -45,8 +45,8 @@ public enum ExceptionCode {
 
     INVALID_USER_NAME(8001, "존재하지 않는 사용자입니다."),
     INVALID_PASSWORD(8002, "비밀번호가 일치하지 않습니다."),
-    NULL_ADMIN_AUTHORITY(8101, "잘못된 관리자 권한입니다."),
-    DUPLICATED_ADMIN_USERID(8102, "중복된 사용자 ID 입니다."),
+    DUPLICATED_ADMIN_EMAIL(8101, "중복된 사용자 이메일입니다."),
+    DUPLICATED_ADMIN_USERNAME(8102, "중복된 사용자 이름입니다."),
     NOT_FOUND_ADMIN_ID(8103, "요청한 ID에 해당하는 관리자를 찾을 수 없습니다."),
     INVALID_CURRENT_PASSWORD(8104, "현재 사용중인 비밀번호가 일치하지 않습니다."),
     INVALID_ADMIN_AUTHORITY(8201, "해당 관리자 기능에 대한 접근 권한이 없습니다."),

@@ -70,9 +70,10 @@ public class Member extends BaseEntity {
     }
 
     @Builder
-    public Member(String name, String email, String phoneNumber, String password, String nickname, String profileUrl, String introduce, String linkUrl, String status, LocalDateTime inactiveDate) {
+    public Member(String name, String email, String role, String phoneNumber, String password, String nickname, String profileUrl, String introduce, String linkUrl, String status, LocalDateTime inactiveDate) {
         this.name = name;
         this.email = email;
+        this.role = role;
         this.phoneNumber = phoneNumber;
         this.password = password;
         this.nickname = nickname;
