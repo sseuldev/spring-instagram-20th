@@ -27,28 +27,18 @@ public class AuthService {
     @Transactional
     public MemberResponseDto signup(SignupRequestDto request) {
 
-        String name = request.name();
         String nickname = request.nickname();
         String password = request.password();
         String email = request.email();
-        String phoneNumber = request.phoneNumber();
 
         if(memberRepository.existsMemberByNickname(nickname)){
             throw new BadRequestException(DUPLICATED_ADMIN_USERNAME);
         }
-
         if (email != null && memberRepository.existsMemberByEmail(email)) {
             throw new BadRequestException(DUPLICATED_ADMIN_EMAIL);
         }
 
-        Member newMember = Member.builder()
-                .name(name)
-                .nickname(nickname)
-                .password(bCryptPasswordEncoder.encode(password))
-                .role("ROLE_ADMIN")
-                .email(email)
-                .phoneNumber(phoneNumber)
-                .build();
+        Member newMember = request.toEntity(bCryptPasswordEncoder.encode(password));
 
         memberRepository.save(newMember);
 

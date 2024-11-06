@@ -1,5 +1,6 @@
 package com.ceos20.instagram_clone.domain.member.dto.request;
 
+import com.ceos20.instagram_clone.domain.member.entity.Member;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -23,5 +24,14 @@ public record SignupRequestDto(
         @Pattern(regexp = "^\\d{10,11}$", message = "휴대전화 번호는 10자리 또는 11자리 숫자입니다.")
         String phoneNumber
 ) {
-
+        public Member toEntity(String encodedPassword) {
+                return Member.builder()
+                        .name(name)
+                        .nickname(nickname)
+                        .password(encodedPassword)
+                        .role("ROLE_ADMIN")
+                        .email(email)
+                        .phoneNumber(phoneNumber)
+                        .build();
+        }
 }
