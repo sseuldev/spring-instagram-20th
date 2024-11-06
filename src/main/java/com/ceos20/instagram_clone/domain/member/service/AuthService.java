@@ -89,17 +89,42 @@ public class AuthService {
      * Access Token 재발급
      * **/
     public String reissueAccessToken(String refreshToken) {
+
         String nickname = jwtUtil.getUsername(refreshToken);
         String role = jwtUtil.getRole(refreshToken);
         return jwtUtil.createJwt("access", nickname, role, 1000L * 60 * 60 * 2);
     }
 
     /**
-     * 재발급 된 Access Token 응답 헤더 설정
+     * 새로운 Refresh Token 생성
      * **/
-    public void setNewAccessToken(HttpServletResponse response, String newAccessToken) {
-        response.setHeader("access", newAccessToken);
+    public Cookie createRefreshTokenCookie(String refreshToken) {
+
+        String nickname = jwtUtil.getUsername(refreshToken);
+        String role = jwtUtil.getRole(refreshToken);
+        String newRefresh = jwtUtil.createJwt("refresh", nickname, role, 1000L * 60 * 60 * 24 * 14);
+
+        return createCookie("refresh", newRefresh);
     }
 
+    private Cookie createCookie(String key, String value) {
 
+        Cookie cookie = new Cookie(key, value);
+        cookie.setMaxAge(1000 * 60 * 60 * 24 * 14);
+        cookie.setHttpOnly(true);
+         cookie.setPath("/");
+        // cookie.setSecure(true);
+
+        return cookie;
+    }
+
+    /**
+     * 응답 헤더 및 쿠키 설정
+     * **/
+    public void setNewTokens(HttpServletResponse response, String newAccessToken, Cookie refreshCookie) {
+
+        response.setHeader("access", newAccessToken);
+
+        response.addCookie(refreshCookie);
+    }
 }

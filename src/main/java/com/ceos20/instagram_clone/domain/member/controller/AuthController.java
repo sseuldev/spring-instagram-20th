@@ -10,6 +10,7 @@ import com.ceos20.instagram_clone.global.common.response.ResponseCode;
 import com.ceos20.instagram_clone.global.jwt.JWTUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -40,8 +41,9 @@ public class AuthController {
         authService.validateRefreshToken(refreshToken);
 
         String newAccessToken = authService.reissueAccessToken(refreshToken);
+        Cookie RefreshTokenCookie = authService.createRefreshTokenCookie(refreshToken);
 
-        authService.setNewAccessToken(response, newAccessToken);
+        authService.setNewTokens(response, newAccessToken, RefreshTokenCookie);
 
         return new CommonResponse<>(ResponseCode.SUCCESS, new TokenResponseDto(newAccessToken, null));
     }
