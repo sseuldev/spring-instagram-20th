@@ -42,7 +42,7 @@ public enum ExceptionCode {
     NOT_FOUND_COMMENT_ID(7001, "요청한 ID에 해당하는 댓글이 존재하지 않습니다."),
     NOT_FOUND_PARENT_COMMENT_ID(7002, "요청한 ID에 해당하는 부모 댓글이 존재하지 않습니다."),
 
-
+    // 인증 에러
     INVALID_USER_NAME(8001, "존재하지 않는 사용자입니다."),
     INVALID_PASSWORD(8002, "비밀번호가 일치하지 않습니다."),
     DUPLICATED_ADMIN_EMAIL(8101, "중복된 사용자 이메일입니다."),
@@ -50,15 +50,15 @@ public enum ExceptionCode {
     NOT_FOUND_ADMIN_ID(8103, "요청한 ID에 해당하는 관리자를 찾을 수 없습니다."),
     INVALID_CURRENT_PASSWORD(8104, "현재 사용중인 비밀번호가 일치하지 않습니다."),
     INVALID_ADMIN_AUTHORITY(8201, "해당 관리자 기능에 대한 접근 권한이 없습니다."),
-    INVALID_AUTHORIZATION_CODE(9001, "유효하지 않은 인증 코드입니다."),
+    NOT_FOUND_REFRESH_TOKEN_IN_DB(9001, "DB에 존재하지 않는 RefreshToken 입니다."),
     NOT_SUPPORTED_OAUTH_SERVICE(9002, "해당 OAuth 서비스는 제공하지 않습니다."),
     FAIL_TO_CONVERT_URL_PARAMETER(9003, "Url Parameter 변환 중 오류가 발생했습니다."),
-    INVALID_REFRESH_TOKEN(9101, "올바르지 않은 형식의 RefreshToken입니다."),
-    INVALID_ACCESS_TOKEN(9102, "올바르지 않은 형식의 AccessToken입니다."),
-    EXPIRED_PERIOD_REFRESH_TOKEN(9103, "기한이 만료된 RefreshToken입니다."),
-    EXPIRED_PERIOD_ACCESS_TOKEN(9104, "기한이 만료된 AccessToken입니다."),
+    INVALID_REFRESH_TOKEN(9101, "올바르지 않은 형식의 RefreshToken 입니다."),
+    INVALID_ACCESS_TOKEN(9102, "올바르지 않은 형식의 AccessToken 입니다."),
+    EXPIRED_PERIOD_REFRESH_TOKEN(9103, "기한이 만료된 RefreshToken 입니다."),
+    EXPIRED_PERIOD_ACCESS_TOKEN(9104, "기한이 만료된 AccessToken 입니다."),
     FAIL_TO_VALIDATE_TOKEN(9105, "토큰 유효성 검사 중 오류가 발생했습니다."),
-    NOT_FOUND_REFRESH_TOKEN(9106, "RefreshToken이 존재하지 않습니다."),
+    NOT_FOUND_REFRESH_TOKEN(9106, "RefreshToken 이 존재하지 않습니다."),
     INVALID_AUTHORITY(9201, "해당 요청에 대한 접근 권한이 없습니다."),
 
     INTERNAL_SERVER_ERROR(9999, "서버 에러가 발생하였습니다. 관리자에게 문의해 주세요.");

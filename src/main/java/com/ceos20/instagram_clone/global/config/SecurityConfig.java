@@ -1,5 +1,6 @@
 package com.ceos20.instagram_clone.global.config;
 
+import com.ceos20.instagram_clone.global.jwt.CustomLogoutFilter;
 import com.ceos20.instagram_clone.global.jwt.JWTFilter;
 import com.ceos20.instagram_clone.global.jwt.JWTUtil;
 import com.ceos20.instagram_clone.global.jwt.LoginFilter;
@@ -17,6 +18,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.logout.LogoutFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 
@@ -88,6 +90,9 @@ public class SecurityConfig {
 
         http
                 .addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil, refreshRepository), UsernamePasswordAuthenticationFilter.class);
+
+        http
+                .addFilterBefore(new CustomLogoutFilter(jwtUtil, refreshRepository), LogoutFilter.class);
 
         http
                 .sessionManagement((session) -> session
