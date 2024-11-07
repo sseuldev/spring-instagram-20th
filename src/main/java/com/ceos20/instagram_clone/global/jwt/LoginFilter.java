@@ -88,9 +88,12 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
     //로그인 실패시 실행하는 메소드
     @Override
-    protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, AuthenticationException failed) {
+    protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, AuthenticationException failed) throws IOException {
 
         response.setStatus(401);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write("{\"result\": \"로그인에 실패하였습니다.\"}");
     }
 
     private void addRefreshEntity(String nickname, String refresh, Long expiredMs) {
