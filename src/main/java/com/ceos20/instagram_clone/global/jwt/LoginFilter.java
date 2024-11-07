@@ -2,6 +2,8 @@ package com.ceos20.instagram_clone.global.jwt;
 
 import com.ceos20.instagram_clone.domain.member.dto.CustomUserDetails;
 import com.ceos20.instagram_clone.domain.member.dto.request.LoginRequestDto;
+import com.ceos20.instagram_clone.domain.member.entity.Refresh;
+import com.ceos20.instagram_clone.global.repository.RefreshRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletInputStream;
@@ -20,7 +22,9 @@ import org.springframework.util.StreamUtils;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.sql.Ref;
 import java.util.Collection;
+import java.util.Date;
 import java.util.Iterator;
 
 @RequiredArgsConstructor
@@ -28,6 +32,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
     private final AuthenticationManager authenticationManager;
     private final JWTUtil jwtUtil;
+    private final RefreshRepository refreshRepository;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
@@ -69,6 +74,9 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         String access = jwtUtil.createJwt("access", nickname, role, 1000L * 60 * 60 * 2);           // 2시간
         String refresh = jwtUtil.createJwt("refresh", nickname, role, 1000L * 60 * 60 * 24 * 14);   // 2주
 
+        //Refresh 토큰 저장
+        addRefreshEntity(nickname, refresh, 1000L * 60 * 60 * 24 * 14);
+
         //응답 설정
         response.setHeader("access", access);
         response.addCookie(createCookie("refresh", refresh));
@@ -80,6 +88,19 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, AuthenticationException failed) {
 
         response.setStatus(401);
+    }
+
+    private void addRefreshEntity(String nickname, String refresh, Long expiredMs) {
+
+        Date date = new Date(System.currentTimeMillis() + expiredMs);
+
+        Refresh refreshEntity = Refresh.builder()
+                .nickname(nickname)
+                .refresh(refresh)
+                .expiration(date.toString())
+                .build();
+
+        refreshRepository.save(refreshEntity);
     }
 
     private Cookie createCookie(String key, String value) {

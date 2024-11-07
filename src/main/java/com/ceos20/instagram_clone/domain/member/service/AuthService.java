@@ -4,9 +4,11 @@ import com.ceos20.instagram_clone.domain.member.dto.request.SignupRequestDto;
 import com.ceos20.instagram_clone.domain.member.dto.response.MemberResponseDto;
 import com.ceos20.instagram_clone.domain.member.dto.response.TokenResponseDto;
 import com.ceos20.instagram_clone.domain.member.entity.Member;
+import com.ceos20.instagram_clone.domain.member.entity.Refresh;
 import com.ceos20.instagram_clone.global.exception.BadRequestException;
 import com.ceos20.instagram_clone.global.jwt.JWTUtil;
 import com.ceos20.instagram_clone.global.repository.MemberRepository;
+import com.ceos20.instagram_clone.global.repository.RefreshRepository;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,6 +20,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Date;
+
 import static com.ceos20.instagram_clone.global.exception.ExceptionCode.*;
 
 @Service
@@ -28,6 +32,7 @@ public class AuthService {
     private final MemberRepository memberRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final JWTUtil jwtUtil;
+    private final RefreshRepository refreshRepository;
 
     /**
      * 회원 가입
@@ -83,6 +88,11 @@ public class AuthService {
         if (!category.equals("refresh")) {
             throw new BadRequestException(INVALID_REFRESH_TOKEN);
         }
+
+        Boolean isExist = refreshRepository.existsByRefresh(refreshToken);
+        if (!isExist) {
+            throw new BadRequestException(INVALID_REFRESH_TOKEN);
+        }
     }
 
     /**
@@ -98,11 +108,18 @@ public class AuthService {
     /**
      * 새로운 Refresh Token 생성
      * **/
+    @Transactional
     public Cookie createRefreshTokenCookie(String refreshToken) {
 
         String nickname = jwtUtil.getUsername(refreshToken);
         String role = jwtUtil.getRole(refreshToken);
         String newRefresh = jwtUtil.createJwt("refresh", nickname, role, 1000L * 60 * 60 * 24 * 14);
+
+        if (nickname == null) {
+            throw new BadRequestException(FAIL_TO_VALIDATE_TOKEN);
+        }
+
+        deleteAndSaveNewRefreshToken(nickname, newRefresh, 1000L * 60 * 60 * 24 * 14);
 
         return createCookie("refresh", newRefresh);
     }
@@ -116,6 +133,34 @@ public class AuthService {
         // cookie.setSecure(true);
 
         return cookie;
+    }
+
+    /**
+     * 기존의 Refresh Token 삭제 후 새 Refresh Token 저장
+     **/
+    @Transactional
+    public void deleteAndSaveNewRefreshToken(String nickname, String newRefresh, Long expiredMs) {
+
+        refreshRepository.deleteByRefresh(newRefresh);
+
+        addRefreshEntity(nickname, newRefresh, expiredMs);
+    }
+
+    /**
+     * 새로운 Refresh Token 저장하는 메서드
+     **/
+    @Transactional
+    public void addRefreshEntity(String nickname, String refresh, Long expiredMs) {
+
+        Date expirationDate = new Date(System.currentTimeMillis() + expiredMs);
+
+        Refresh refreshEntity = Refresh.builder()
+                .nickname(nickname)
+                .refresh(refresh)
+                .expiration(expirationDate.toString())
+                .build();
+
+        refreshRepository.save(refreshEntity);
     }
 
     /**
