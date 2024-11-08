@@ -1,7 +1,8 @@
-package com.ceos20.instagram_clone.domain.post.entity;
+package com.ceos20.instagram_clone.domain.hashtag.entity;
 
 import com.ceos20.instagram_clone.domain.comment.entity.Comment;
 import com.ceos20.instagram_clone.domain.hashtag.entity.Hashtag;
+import com.ceos20.instagram_clone.domain.post.entity.Post;
 import com.ceos20.instagram_clone.global.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -23,4 +24,10 @@ public class Posthashtag extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "hashtag_id")
     private Hashtag hashtag;
+
+    @Builder
+    public Posthashtag(Post post, Hashtag hashtag) {
+        this.post = post;
+        this.hashtag = hashtag;
+    }
 }

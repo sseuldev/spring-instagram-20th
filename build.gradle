@@ -29,6 +29,9 @@ dependencies {
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 	testImplementation 'org.mockito:mockito-core:3.12.4'
 	testImplementation 'org.mockito:mockito-junit-jupiter:3.12.4'
+
+	// Swagger
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0'
 }
 
 tasks.named('test') {

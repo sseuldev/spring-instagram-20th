@@ -6,9 +6,9 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 
 @Builder
-public record ChatroomReq (
-        @NotNull Long senderId,
-        @NotNull Long receiverId
+public record ChatroomRequestDto(
+        @NotNull Long receiverId,
+        String content
 ) {
     public Chatroom toEntity(Member sender, Member receiver) {
         return Chatroom.builder()

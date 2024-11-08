@@ -11,8 +11,6 @@ import java.util.List;
 
 @Entity
 @Getter
-@AllArgsConstructor
-@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Post extends BaseEntity {
 
@@ -25,8 +23,7 @@ public class Post extends BaseEntity {
     private String content;
 
     @Column(name = "comment_count")
-    @Builder.Default
-    private int commentCount = 0;
+    private int commentCount;
 
     @Column(length = 30)
     private String location;
@@ -38,10 +35,18 @@ public class Post extends BaseEntity {
     private Member member;
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
     private List<Image> images = new ArrayList<>();
 
     public void updateCommentCount(int commentCount) {
         this.commentCount = commentCount;
+    }
+
+    @Builder
+    public Post(String content, String location, String music, Member member) {
+        this.content = content;
+        this.commentCount = 0;
+        this.location = location;
+        this.music = music;
+        this.member = member;
     }
 }

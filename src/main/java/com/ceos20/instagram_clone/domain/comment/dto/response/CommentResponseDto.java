@@ -9,41 +9,35 @@ import java.util.List;
 
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public record CommentRes(
+public record CommentResponseDto(
         Long commentId,
         String content,
         int likes,
         Long postId,
         Long memberId,
-
         String nickname,
-
         Long parentCommentId,
-
-        List<CommentRes> replies
+        List<CommentResponseDto> replies
 ) {
-    public static CommentRes createCommentRes(Comment comment) {
-        return CommentRes.builder()
-                .commentId(comment.getId())
-                .content(comment.getContent())
-                .likes(comment.getLikes())
-                .postId(comment.getPost().getId())
-                .memberId(comment.getMember().getId())
-                .parentCommentId(comment.getParentComment() != null ? comment.getParentComment().getId() : null)
-                .replies(new ArrayList<>())
-                .build();
-    }
-
-    public static CommentRes getCommentRes(Comment comment, List<CommentRes> replies) {
-        return CommentRes.builder()
+    public static CommentResponseDto from(Comment comment) {
+        return CommentResponseDto.builder()
                 .commentId(comment.getId())
                 .content(comment.getContent())
                 .likes(comment.getLikes())
                 .postId(comment.getPost().getId())
                 .memberId(comment.getMember().getId())
                 .nickname(comment.getMember().getNickname())
-                .parentCommentId(comment.getParentComment() != null ? comment.getParentComment().getId() : null)  // 부모 댓글 ID 설정
-                .replies(replies)
+                .parentCommentId(comment.getParentComment() != null ? comment.getParentComment().getId() : null)
+                .replies(getReplies(comment))
                 .build();
+    }
+
+    private static List<CommentResponseDto> getReplies(Comment parentComment) {
+        return parentComment.getReplies() != null
+                ? parentComment.getReplies().stream()
+                .map(CommentResponseDto::from)
+                .filter(reply -> reply.parentCommentId != null) // 대댓글만 포함
+                .toList()
+                : new ArrayList<>();
     }
 }

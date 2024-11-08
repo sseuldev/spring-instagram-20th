@@ -9,18 +9,12 @@ import lombok.Builder;
 import java.time.LocalDateTime;
 
 @Builder
-public record MessageReq(
-
-        @NotNull Long chatroomId,
-
-        @NotNull Long senderId,
-
+public record MessageRequestDto(
         @NotNull String content
 ) {
     public Message toEntity(Member sender, Chatroom chatroom) {
         return Message.builder()
                 .content(content)
-                .sendTime(LocalDateTime.now())
                 .sender(sender)
                 .chatroom(chatroom)
                 .build();

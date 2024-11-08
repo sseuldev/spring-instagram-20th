@@ -17,10 +17,16 @@ public enum ExceptionCode {
     NOT_FOUND_CHATROOM_ID(2001, "요청한 ID에 해당하는 채팅방이 존재하지 않습니다."),
     INVALID_CHATROOM(2002, "존재하지 않는 채팅방입니다."),
     VALID_CHATROOM(2003, "이미 존재하는 채팅방입니다."),
+    INVALID_CHATROOM_AUTHORITY(2004, "해당 채팅방에 대한 접근 권한이 없습니다."),
+
 
     // 게시글 에러
     NOT_FOUND_POST_ID(3001, "요청한 ID에 해당하는 게시글이 존재하지 않습니다."),
     NOT_FOUND_POST_LIKE(3002, "요청한 ID에 해당하는 게시글 좋아요가 존재하지 않습니다."),
+
+    // 해시태그 에러
+    VALID_HASHTAG(4001, "이미 존재하는 해시태그입니다."),
+    INVALID_HASHTAG(4002, "존재하지 않는 해시태그입니다."),
 
     // 이미지 에러
     EXCEED_IMAGE_CAPACITY(5001, "업로드 가능한 이미지 용량을 초과했습니다."),
@@ -58,6 +64,5 @@ public enum ExceptionCode {
     INTERNAL_SERVER_ERROR(9999, "서버 에러가 발생하였습니다. 관리자에게 문의해 주세요.");
 
     private final int code;
-
     private final String message;
 }

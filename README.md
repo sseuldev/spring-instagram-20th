@@ -671,5 +671,384 @@ public MemberRes updateMemberInfo(MemberReq request, Long memberId) {
 
 그 이전보다 비즈니스 로직이 더 잘 보이고 가독성있게 작성됐다는 것을 확인할 수 있다!
 
+<br />
+
+<br />
+
+# 3-1. 🌿지난주 코드 리팩토링🌿
+
+## ✏️ `Where` 어노테이션 삭제하기
+
+기존의 `@Where` 어노테이션이 _deprecated_ (더 이상 사용되지 않음) 되고, 그 대안책으로 사용되는 것이 `@SQLRestriction` 이다!
+
+<br />
+
+### `@SQLRestriction` 이란?
+
+- 특정 엔티티 필드에 대해 SQL 조건을 설정하는데 사용
+- 해당 필드에 대한 조회나 수정이 이루어질 때마다 이 제약 조건이 자동으로 반영
+- 특히 필터링이 필요하거나, 논리적으로 삭제된 데이터를 제외하고 싶은 경우 등에 사용됨
+
+---
+
+❌ 그러나 `@SQLRestriction` 에 대한 문제점이 많은 것 같아, 사용하지 않기로 결정하였음
+
+1. 제약 조건이 고정적
+    - `@SQLRestriction` 에 지정된 조건은 동적으로 변경할 수 없으므로, 조건이 고정된 상황에서만 사용이 가능
+2. 복잡한 필터링에서는 어려움 존재
+3. 백오피스를 사용하여 데이터 통계를 내는 경우, 삭제된 데이터 조회 불가
+    - **Soft Delete** 방식을 선택한 의미가 사라짐
+
+### 🤔 이걸 안쓰면 어떻게 할거야?
+```java
+Optional<Post> findByIdAndDeletedAtIsNull(Long postId);
+```
+조건부 쿼리 메소드를 작성하는 방식을 선택하였다.
+
+`deletedAt`이 `NULL`인 경우만 조회하기 때문에 명시적이고 유연한 조건 설정이 가능해진다!
+
+<br />
+
+## ✏️ List 타입 총 정리
+
+### 1. `Stream` 이란?
+
+컬렉션(배열 포함)의 저장 요소를 하나씩 참조해서 람다식으로 처리할 수 있도록 해주는 반복자
+
+- 데이터 소스를 스트림으로 변환 (`stream()` 메서드)
+- **중간 연산**을 사용하여 데이터를 변환 또는 필터링
+- **종료 연산**을 사용하여 결과를 모으거나 처리
+
+---
+
+#### ✔️ 중간 연산
+
+- `map(Function)` → 각 요소를 다른 값으로 변환
+- `filter(Predicate)` → 조건에 맞는 요소만 선택
+- `sorted()` → 요소들을 정렬
+
+#### ✔️ 종료 연산
+
+- `collect(Collector)` → 스트림의 요소를 수집하여 리스트나 세트로 반환
+- `forEach(Consumer)` → 각 요소에 대해 특정 작업을 수행
+- `reduce(BinaryOperator)` → 요소를 반복적으로 결합하여 단일 결과를 생성
+
+```java
+List<Integer> studentIds = students.stream()
+        .filter(student -> student.getGrade() >= 90) // 점수가 90 이상인 학생만 필터링
+        .sorted(Comparator.comparing(Student::getAge)) // 나이 순서로 정렬
+        .map(Student::getId) // 학생의 ID만 추출
+        .collect(Collectors.toList()); // ID를 List로 수집
+```
+
+<br />
+
+### 2. 메서드 레퍼런스 (map 함수)
+
+```java
+// 메서드 레퍼런스
+.map(this::findOrCreateHashtag)
+.map(HashtagResponseDto::from)
+
+// 기존
+.map(hashtag -> this.findOrCreateHashtag(hashtag))
+.map(hashtag -> HashtagResponseDto.from(hashtag))
+```
+
+<br />
+
+### 3. `Collectors.toList()` vs `Stream.toList()`
+
+### ☑️ `Collectors.toList()`
+
+- **Java 8**에서 도입된 메서드로, 스트림의 요소들을 **리스트로 수집**하는 가장 일반적인 방법
+- 스트림에서 수집된 데이터를 `List`로 변환하는 **Collector**
+
+```java
+stream.collect(Collectors.toList());
+```
+<br />
+
+### ☑️ `Stream.toList()`
+
+- **Java 16**에서 새롭게 도입된 메서드로, **간단하게 리스트로 변환**할 때 사용
+- `Collectors.toList()`와 동일한 기능을 하며 더 간결한 문법을 제공
+- `Stream.toList()`는 불변 리스트를 반환하는 반면, `Collectors.toList()`는 **가변 리스트**를 반환
+
+  ⇒ `Stream.toList()`로 반환된 리스트는 수정할 수 없음
+
+---
+
+### ☑️ 비교
+- `Collectors.toList()`는 **가변 리스트**를 반환
+
+  ✔️ 반환된 리스트에서 요소를 추가하거나 제거할 수 있음
+
+- `Stream.toList()`는 **불변 리스트**를 반환할 수 있음
 
 
+불변 리스트 반환이 가능하고 형태가 더 간결한 `Stream.toList()` 를 사용하기로 결정!
+```java
+.imageUrls(post.getImages().stream()
+.map(Image::getImageUrl)  // 각 Image 객체에서 imageUrl 값을 추출하여 새로운 스트림 생성
+.toList())  // 리스트로 변환
+```
+
+<br />
+
+## ✏️ dto로 알아보는 `public`과 `public static`의 차이
+
+### 1. `public` (인스턴스 메서드)
+```java
+public Chatroom toEntity(Member sender, Member receiver) {
+    return Chatroom.builder()
+                .sender(sender)
+                .receiver(receiver)
+                .build();
+}
+```
+
+- 클래스의 인스턴스를 먼저 생성 후 호출 가능
+- 특정 객체의 상태를 변환하거나 그 객체와 밀접한 관련이 있을 때 주로 사용
+- 객체의 상태에 따라 동작하는 메서드를 정의할 때 사용
+- 예) `toEntity`는 `ChatroomRequestDto` 객체가 만들어진 후에 그 객체에 접근해 호출됨
+
+```java
+MyClass obj = new MyClass();    // 객체가 만들어져야
+obj.instanceMethod();           // 호출 가능
+```
+<br />
+
+### 2. `public static` (정적 메서드)
+
+```java
+public static ChatroomResponseDto from(Chatroom chatroom) {
+        return ChatroomResponseDto.builder()
+                .chatroomId(chatroom.getId())
+                .senderId(chatroom.getSender().getId())
+                .receiverId(chatroom.getReceiver().getId())
+                .createdAt(chatroom.getCreatedAt())
+                .build();
+    }
+```
+- 클래스의 인스턴스를 생성하지 않고도, 클래스 자체에서 호출 가능
+- 특정 인스턴스에 의존하지 않음
+- 객체와 관계없이 클래스 레벨에서 공통적으로 사용할 수 있는 메서드를 정의할 때 사용
+- **정적 팩토리 메서드 패턴**에서 사용되는 방식
+
+  👉 왜? 인스턴스가 없더라도 사용할 수 있으며, 인스턴스 자체의 상태와 관련이 없기 때문
+
+```java
+MyClass.printMessage();
+```
+
+<br />
+
+## ✏️ cascade 속성과 orphan 속성 이해하기
+
+```java
+@OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+private List<Image> images = new ArrayList<>();
+```
+
+**`Post` 엔티티를 저장할 때 연관된 `Image` 엔티티들도 자동으로 저장**됨. 
+
+✅ 따라서 `imageRepository.saveAll(images)`를 따로 호출할 필요가 없다!!
+
+- **`cascade = CascadeType.ALL`**
+  - `Post` 엔티티가 **저장**되거나 **수정**, **삭제**될 때 연관된 `Image` 엔티티들도 함께 처리된다는 의미
+  - 즉, `Post`를 저장하면 그에 속한 `Image` 리스트도 함께 저장
+  
+
+- **`orphanRemoval = true`**
+  - `Post`에 속한 `Image`가 **Post 엔티티에서 제거되면** 자동으로 해당 `Image`도 삭제된다는 의미
+  - 즉, 고아 상태가 된 `Image` 엔티티를 자동으로 제거해줌
+
+
+💡 **`Post`와 연관된 `Image` 엔티티들은 **자동으로 영속성 컨텍스트에 저장**되거나 **삭제**되기 때문에 따로 신경써주지 않아도 됨!**
+
+<br />
+
+# 3-2. Controller 코드 구현
+
+## 🤔 성공 응답 코드 통일하기
+```java
+@Data
+@AllArgsConstructor
+public class CommonResponse<T> {
+
+    private int code;
+    private boolean inSuccess;
+    private String message;
+    private T result;
+
+    public CommonResponse(ResponseCode status, T result) {
+        this.code = status.getCode();
+        this.inSuccess = status.isInSuccess();
+        this.message = status.getMessage();
+        this.result = result;
+    }
+
+    public CommonResponse(ResponseCode status) {
+        this.code = status.getCode();
+        this.inSuccess = status.isInSuccess();
+        this.message = status.getMessage();
+    }
+}
+```
+
+```java
+@Getter
+public enum ResponseCode {
+
+    SUCCESS(2000, true, "요청에 성공하였습니다.");
+
+    private int code;
+    private boolean inSuccess;
+    private String message;
+
+    ResponseCode(int code, boolean inSuccess, String message) {
+        this.inSuccess = inSuccess;
+        this.code = code;
+        this.message = message;
+    }
+}
+```
+### Controller 코드
+```java
+@Operation(summary = "게시글 조회", description = "하나의 게시글을 조회하는 API")
+@GetMapping("/{postId}")
+public CommonResponse<PostResponseDto> getPost(@PathVariable Long postId) {
+
+    return new CommonResponse<>(ResponseCode.SUCCESS, postService.getPost(postId));
+}
+```
+
+### 프론트엔드에게 전해지는 실제 응답
+![스크린샷 2024-10-28 025755](https://github.com/user-attachments/assets/ee18575a-c8e7-4ae3-91db-ca322282fd9e)
+
+<br />
+
+## 🤔 트러블 슈팅 < 일대일 채팅 조회 >
+
+### 문제점
+사용자가 참여한 일대일 채팅방을 조회하는 API를 작성하던 과정에서 발생한 문제이다. 
+
+```java
+@Operation(summary = "1:1 채팅방 조회", description = "1:1 채팅방을 조회하는 API")
+@GetMapping("/{senderId}/{receiverId}")
+public CommonResponse<ChatroomResponseDto> getChatroom(@PathVariable Long senderId, @PathVariable Long receiverId) {
+
+    return new CommonResponse<>(ResponseCode.SUCCESS, chatService.getChatroom(senderId, receiverId));
+}
+```
+
+sender 와 receiver 를 구분해서 인자를 받고 서비스 코드에서 조회하는 로직으로 구성하였다.
+이때, 실제로는 sender, receiver 구분 없이 내가 대화를 참여하고 있다면 채팅방 조회가 되어야한다! 
+
+따라서 서비스 로직에서는, `findBySenderAndReceiverOrReceiverAndSender(sender, receiver, receiver, sender)` 를 이용하여 sender와 receiver의 위치에 관계없이 채팅방을 조회할 수 있도록 구성하였다. 
+
+하지만 swagger 테스트를 해보니 내가 sender 인 경우만 채팅방 조회가 되고, receiver 의 경우에는 채팅방 조회가 되지 않는 문제가 발생하였다. 
+
+<br />
+
+### 문제의 원인
+문제는 내가 작성한 **JPA 메서드 쿼리**에 있었다. 
+
+보다시피 해당 메서드 쿼리는 `AND` 과 `OR` 이 복잡하게 혼합되어있음을 알 수 있다. JPA에서는 `OR` 조건을 포함한 쿼리를 작성할 때, `AND` 와 `OR` 의 조합을 정확히 해석하지 못할 수 있다고 한다. 이로 인해 내 의도와는 다르게 코드가 동작한 것이다. 
+
+<br />
+
+### 해결책
+~~JPQL도 짜버릇 하자~~
+#### 💡`@Query` 어노테이션을 사용해서 JPQL로 작성하자
+```java
+@Query("SELECT c FROM Chatroom c WHERE " +
+       "((c.sender = :sender AND c.receiver = :receiver) OR " +
+       "(c.sender = :receiver AND c.receiver = :sender)) AND c.deletedAt IS NULL")
+Optional<Chatroom> findChatroomByMembers(@Param("sender") Member sender, @Param("receiver") Member receiver)
+```
+- `@Query`
+  - JPA Repository 메서드에서 직접 쿼리를 작성할 수 있게 해주는 어노테이션
+- `sender` 와 `receiver` 의 위치가 바뀌어도 동일한 채팅방이 조회되도록 해라.
+- `@Param("sender")`와 `@Param("receiver")`
+  - `@Param` 어노테이션을 사용해 sender와 receiver 파라미터를 쿼리에서 사용할 수 있게 함
+
+<br />
+
+# 3-3. Controller 통합 테스트 구현
+
+## 1. 테스트 클래스 설정
+```java
+@SpringBootTest
+@AutoConfigureMockMvc
+@Transactional
+class PostControllerTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+```
+
+- `@SpringBootTest` 와 `@AutoConfigureMockMvc`
+  - SpringBoot 테스트 환경 구성
+  - `MockMvc` 를 자동 설정하여 테스트 중 애플리케이션 컨텍스트를 로드하고, 컨트롤러의 실제 엔드포인트를 호출할 수 있도록 함
+
+
+- `@Transactional`
+  - 테스트가 끝나면 DB 변경 사항을 자동으로 롤백하여 테스트 환경을 깨끗하게 유지하는 역할
+
+
+- `ObjectMapper`
+  - Java 객체와 JSON 간의 변환을 담당
+  - 요청 본문으로 객체를 JSON으로 변환하여 전달하거나, JSON 응답을 객체로 변환할 때 사용
+
+<br />
+
+## 2. 테스트 코드
+```java
+@Test
+public void 게시물_생성_성공() throws Exception {
+
+    // given
+    List<String> images = List.of("aaa", "bbb");
+    PostRequestDto request = new PostRequestDto("새로운 게시글입니다",0, "서울시", "music", images);
+
+    // when & then
+    mockMvc.perform(post("/api/post/{memberId}", memberId)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
+
+            .andDo(print()) // 요청과 응답 정보를 콘솔에 출력
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.result.content").value("새로운 게시글입니다"))
+            .andExpect(jsonPath("$.result.location").value("서울시"))
+            .andExpect(jsonPath("$.result.music").value("music"))
+            .andExpect(jsonPath("$.result.imageUrls[0]").value("aaa"))
+            .andExpect(jsonPath("$.result.imageUrls[1]").value("bbb"));
+}
+```
+
+- `mockMvc.perform`
+  - `MockMvc` 객체를 통해 HTTP 요청을 실행하는 메서드
+
+
+- `contentType(MediaType.APPLICATION_JSON)`
+  - 요청의 Content-Type이 JSON 형식임을 명시
+
+
+- `content(objectMapper.writeValueAsString(request))`
+  - `PostRequestDto` 객체를 JSON 문자열로 변환하여 요청 본문에 포함시킴
+
+
+- `andDo(print())`
+  - 요청과 응답 정보를 콘솔에 출력
+
+
+- `andExpect` 메서드
+  - 서버의 응답이 예상한 결과와 일치하는지 검증
+  - `status().isOk()` 는 응답 HTTP 상태 코드가 **200 OK** 인지 확인
+  - `jsonPath("$.result.content").value("새로운 게시글입니다")`
+    - 응답 JSON의 `result.content` 필드 값이 일치하는지 확인

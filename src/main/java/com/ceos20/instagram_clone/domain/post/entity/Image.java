@@ -7,8 +7,6 @@ import lombok.*;
 
 @Entity
 @Getter
-@Builder
-@AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Image extends BaseEntity {
 
@@ -23,4 +21,10 @@ public class Image extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id")
     private Post post;
+
+    @Builder
+    public Image(String imageUrl, Post post) {
+        this.imageUrl = imageUrl;
+        this.post = post;
+    }
 }

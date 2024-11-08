@@ -1,4 +1,4 @@
-package com.ceos20.instagram_clone.domain;
+package com.ceos20.instagram_clone.domain.post.repository;
 
 import com.ceos20.instagram_clone.domain.member.entity.Member;
 import com.ceos20.instagram_clone.domain.post.entity.Image;
