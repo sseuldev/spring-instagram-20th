@@ -12,8 +12,9 @@ import org.springframework.context.annotation.Configuration;
 public class SwaggerConfig {
     @Bean
     public OpenAPI openAPI() {
-
         String jwt = "JWT";
+
+        // Security Requirement와 Security Scheme 설정
         SecurityRequirement securityRequirement = new SecurityRequirement().addList(jwt);
         Components components = new Components().addSecuritySchemes(jwt, new SecurityScheme()
                 .name(jwt)
@@ -21,12 +22,14 @@ public class SwaggerConfig {
                 .scheme("bearer")
                 .bearerFormat("JWT")
         );
+
+        // OpenAPI 객체 반환
         return new OpenAPI()
-                .components(new Components())
+                .components(components)
                 .info(apiInfo())
-                .addSecurityItem(securityRequirement)
-                .components(components);
+                .addSecurityItem(securityRequirement);
     }
+
     private Info apiInfo() {
         return new Info()
                 .title("인스타그램 클론 API") // Swagger 메인 타이틀

@@ -21,8 +21,10 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.security.web.authentication.logout.LogoutFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Collections;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -32,6 +34,7 @@ public class SecurityConfig {
     private final AuthenticationConfiguration authenticationConfiguration;
     private final JWTUtil jwtUtil;
     private final RefreshRepository refreshRepository;
+    private final MemberRepository memberRepository;
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
@@ -79,15 +82,16 @@ public class SecurityConfig {
 
         http
                 .authorizeHttpRequests((auth) -> auth
-                        .requestMatchers("/login", "/", "/api/auth/signup", "/**").permitAll()
-                        .requestMatchers("/api/auth/admin").hasRole("ADMIN")
-                        .requestMatchers("/api/auth/reissue").permitAll()
-                        .requestMatchers("/swagger-ui/**","/v3/api-docs/**").permitAll()
-                        .anyRequest().authenticated());
+                        .requestMatchers("/login", "/", "/api/auth/signup", "/api/auth/reissue", "/swagger-ui.html", "/swagger-ui/**","/v3/api-docs/**").permitAll()
+
+                        .requestMatchers("/api/post/**").authenticated()
+                        .requestMatchers("/api/member/**").authenticated()
+//                        .requestMatchers("/api/auth/admin").hasRole("ADMIN")
+                        .anyRequest().permitAll()
+                );
 
         http
-                .addFilterBefore(new JWTFilter(jwtUtil), LoginFilter.class);
-
+                .addFilterBefore(new JWTFilter(jwtUtil, memberRepository), LoginFilter.class);
         http
                 .addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil, refreshRepository), UsernamePasswordAuthenticationFilter.class);
 
