@@ -1052,3 +1052,338 @@ public void 게시물_생성_성공() throws Exception {
   - `status().isOk()` 는 응답 HTTP 상태 코드가 **200 OK** 인지 확인
   - `jsonPath("$.result.content").value("새로운 게시글입니다")`
     - 응답 JSON의 `result.content` 필드 값이 일치하는지 확인
+
+<br />
+
+<br />
+
+# 4. Spring Security
+
+## 4-1. JWT 인증(Authentication)
+![jwt](https://github.com/user-attachments/assets/1d644977-126a-44d5-9283-f505964d256a)
+
+> JWT를 이용한 인증 방식에서는 **accessToken** 과 **refreshToken** 을 활용한다.
+
+### ⭐ JWT 인증 흐름 요약
+
+1. **로그인 시, accessToken과 refreshToken 발급**
+   - 이때, refreshToken은 accessToken보다 토큰 만료 기간이 더 길다!
+2. **accessToken으로 인증**
+   - 클라이언트는 API 요청 시 accessToken을 사용하여 서버에 사용자를 인증
+3. **accessToken 만료 시 refreshToken 사용**
+   - accessToken이 만료되면, 클라이언트는 refreshToken을 사용해 새로운 accessToken을 요청
+   - 서버는 DB에 저장된 refreshToken과 비교하여 유효한 경우, 새로운 accessToken 발급
+
+     ✅ 검증을 위해서 서버에 refreshToken을 별도로 저장시키는 로직 필요!
+4. **refreshToken 만료 시 재로그인 필요**
+   - refreshToken 또한 만료되거나 유효하지 않으면, 사용자는 다시 로그인해야 함
+
+<br />
+
+### ⭐ JWT 생성 원리 및 암호화 방식
+
+> Header + Payload + Signature 구조
+
+내부 정보를 단순 `BASE64` 방식으로 인코딩하기 때문에 외부에서 쉽게 디코딩이 가능하다. 
+
+따라서, 외부에서 열람해도 되는 정보만을 담아야 한다!
+
+❌ 토큰 내부에 비밀번호와 같은 값 입력 금지
+
+- 토큰 자체의 발급처를 확인하기 위해서 사용
+- (내가 선택한) 암호화 방식 : 양방향 대칭키 방식인 `HS256` 사용하기로 결정
+
+  ✅ 암호화 키를 따로 `application.yml` 파일에 저장해두어야 함 (유출 방지 위함)
+
+<br />
+
+## 4-2. 세션, 토큰, 쿠키, OAuth 방식 비교
+**'누가' 로그인 중인지**에 대한 상태를 기억하기 위해 **세션, 토큰, 쿠키**를 사용한다.
+
+### 1. 세션
+- 서버 중심의 인증 방식 ⇒ 서버에 사용자 상태를 저장
+- 비밀번호와 같은 인증 정보를 쿠키에 저장하지 않고, 대신에 사용자의 식별자인 `session Id` 를 저장
+
+  ⇒ `session id`를 통해 클라이언트와 소통하는 형식
+
+- 보안성이 높은 반면,  저장소가 과부하될 가능성 존재
+
+### **2. 토큰**
+
+- 클라이언트 측에 토큰 정보 저장
+- 요청 헤더에 직접 포함하여 전송
+- 서버는 무상태 (Stateless) 로 동작
+
+  ❓ `Stateless` : 서버가 각 요청에 대한 상태를 저장하지 않는 방식
+
+- 확장성과 성능이 뛰어나지만,  보안 측면에서 관리가 필요
+- 일정한 토큰 유효기간 동안의 토큰 보안 관리 필요
+
+### **3. 쿠키**
+
+- 클라이언트와 서버 간의 상태 정보를 유지하기 위해 사용
+- 쿠키는 공개 가능한 정보를 사용자의 브라우저에 저장시킴
+- 사용자를 식별할 수 있는 토큰 (`refreshToken`) 이나 `session ID` 같은 식별 정보를 저장
+- 서버에 부담이 없고 클라이언트 측에서 상태를 유지할 수 있지만, 보안에 취약하고 클라이언트측으로부터 조작될 가능성이 존재한다는 단점 존재
+
+#### ✔️ 과정
+1. 서버는 클라이언트의 로그인 요청에 대한 응답을 작성할 때, 클라이언트 측에 저장하고 싶은 정보를 응답 헤더의 `set-cookie` 에 담아 응답
+2. 클라이언트가 쿠키를 저장하고 이후 모든 요청마다 쿠키를 서버로 다시 전송하는 방식으로 동작
+3. 서버는 쿠키에 담긴 정보를 바탕으로 해당 요청의 클라이언트가 누군지 식별
+
+### 4. OAuth
+
+- 인증의 과정을 **'타 서비스에게 위임'** 하는 인증 방식 (예: 소셜로그인)
+
+#### ✔️ 과정
+1. **사용자 요청**
+   - 클라이언트는 사용자가 리소스 서버 (예: Google, Facebook) 에 접근하고자 하는 경우, 사용자를 OAuth 인증 서버로 리디렉션하여 접근 권한을 요청
+
+2. **사용자 승인**
+   - 사용자는 OAuth 서버에서 로그인하고 애플리케이션이 자신의 정보에 접근하는 것을 승인
+
+3. **Authorization Code 발급**
+   - 인증 서버는 사용자를 승인한 후, 클라이언트에게 `Authorization Code` 를 발급하여 전달
+   - 이 코드는 일회용이며 짧은 시간 동안만 유효
+
+4. **accessToken 요청**
+   - 클라이언트는 `Authorization Code` 와 함께 인증 서버에 `accessToken` 을 요청
+
+5. **accessToken 발급**
+   - 인증 서버는 요청을 검증한 후, 클라이언트에게 `accessToken` 을 발급
+
+6. **리소스 서버 요청**
+   - 클라이언트는 `accessToken` 을 포함해 리소스 서버에 요청을 보냄
+   - 서버는 토큰을 검증하여 요청된 리소스 제공
+
+#### ✔️ 예시
+구글은 웹 사이트 사용자가 '구글 로그인' 기능을 통해 구글에게 전송한 구글 계정 정보가 유효한지 (구글 아이디 및 비밀번호가 일치하는지) 를 확인한다.
+
+유효하다면 해당하는 구글 유저 정보 중 일부 (유저 이름, 프로필 이미지 등) 를 내 웹 사이트에 제공해주는 **'인증' 과정만을 처리**해주는 방식이다!
+
+<br />
+
+### ❔ 인증과 인가의 차이
+
+#### 인증 (**Authentication**)
+
+사용자가 누구인지 확인하고 증명해주는 로그인/로그아웃 같은 것
+
+#### 인가 (**Authorization**)
+
+인증된 사용자가 페이지에 접근할 수 있는 권한
+
+✅ 인증이 먼저 이루어지고 그 다음 인가가 뒤따르게 됨
+
+<br />
+
+## 4-3. Spring Security 구현하기
+<img src="https://github.com/user-attachments/assets/bd1d373f-6e54-4ca7-ac19-274732fe49a2" width="300px" />
+
+사용자 이름 (닉네임) 과 비밀번호만을 이용해 로그인하는 방식으로 로직을 구현해보았다. 
+
+## 1. SecurityConfig 설정
+
+- 스프링 시큐리티의 인가 및 설정을 담당하는 클래스
+- 인증을 관리하는 `AuthenticationManager`를 설정
+- `LoginFilter`, `JWTFilter`, `CustomLogoutFilter`를 시큐리티 필터 체인에 추가해서 각 필터가 적절한 시점에 동작하도록 구성
+
+✔️ `http.authorizeHttpRequests().requestMatchers(...)`
+
+- 경로별 인가 작업 담당
+- 특정 url에 대한 접근 권한 설정
+- `permitAll` : 모든 권한 허용
+- `.anyRequest().authenticated());` : 로그인한 사용자만 접근 가능 (인증 필요)
+
+
+✔️ **Stateless 상태 지정**
+```java
+http
+        .sessionManagement((session) -> session
+            .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+```
+
+JWT를 통한 인증/인가를 위해서 세션을 `STATELESS` 상태로 설정하는 것이 중요!!
+
+✔️ **csrf 비활성화해도 되는 이유?**
+
+> `CSRF` 는 주로 **세션 쿠키를 사용하는 환경에서 발생하는 공격**
+
+- JWT 인증 방식에서는 서버가 클라이언트의 세션 상태를 유지하지 않고, 매 요청마다 클라이언트가 토큰을 포함해 인증을 수행
+- JWT는 각 요청에 인증 정보를 포함하기 때문에 **세션을 사용하지 않는 `Stateless` 방식** ⇒ `CSRF` 보호가 필요하지 않음
+
+### CORS
+
+- 웹 브라우저는 보안상의 이유로 다른 도메인 간의 리소스 요청을 제한함
+- CORS 설정을 통해 특정 도메인에서의 요청 허용 가능
+
+✔️ **CORS 에러**
+
+서로 다른 도메인의 애플리케이션 간 API 호출 제한되어 발생하는 에러
+
+예) 백엔드의 8080 포트와 프론트엔드의 3000 포트
+    
+⇒ **포트가 다르기 때문에 서로 다른 출처**로 인식되어 CORS 에러가 발생
+
+```java
+configuration.setAllowedOrigins(Collections.singletonList("http://localhost:3000"));
+```
+
+✅ 프론트엔드에서 데이터 보낼 3000번대 포트 허용
+
+<br />
+
+## 2. 로그인 로직 구현
+
+### 1. LoginFilter
+
+- 커스텀 `UsernamePasswordAuthentication` 필터 작성 (상속받아 사용)
+- 로그인 요청 처리하는 필터 ⇒ **아이디, 비밀번호 검증**을 위한 커스텀 필터
+- `AuthenticationManager` 를 이용하여 DB에 저장되어 있는 회원 정보를 기반으로 검증할 로직 작성
+- 로그인 성공 시 **JWT를 반환**할 success 핸들러 생성
+- 커스텀한 필터 `SecurityConfig`에 등록해야 함
+- refreshToken은 DB에 저장해서 토큰 재발급이 가능하도록 함
+
+### 2. CustomUserDetailsService
+- `UserDetailsService` 커스텀해서 구현
+- DB에서 **사용자 정보를 조회**하는 기능
+
+### 3. CustomUserDetails
+
+- `UserDetails` 커스텀해서 구현
+- 인증된 사용자 정보를 관리
+- **`UserDetailsService` 에 데이터를 넘겨주는 DTO 역할**
+- 여기서 실행되는 `getMemberId` 메서드를 이용하여 추후 컨트롤러에 사용될 사용자 토큰 정보 가져옴
+
+### ⭐ 회원 검증
+
+- `UsernamePasswordAuthenticationFilter`가 호출한 `AuthenticationManager` 를 통해 진행
+
+- `AuthenticationManager` 는 DB에서 조회한 데이터를 `UserDetailsService`를 통해 받아서 회원 검증
+
+### 4. JWTUtil
+
+- JWT에 관한 발급과 검증을 담당하는 클래스
+- JWT를 생성하고 검증하는 핵심 로직!
+
+### 5. JWTFilter
+
+- 들어오는 HTTP 요청의 헤더에서 JWT 추출 및 사용자 인증에 대한 처리 진행
+- 요청 헤더 **Authorization 키에 JWT가 존재**하는 경우, JWT를 검증하고 강제로 `SecurityContextHolder` 에 세션을 생성
+
+    (이 세션은 `STATELESS` 상태로 관리되기 때문에 해당 요청이 끝나면 소멸)
+
+### ⭐ 액세스 & 리프레쉬 토큰 발급
+
+로그인 성공 시 `Access/Refresh`에 해당하는 다중 토큰 발급 ⇒ 총 2개의 토큰을 발급
+
+- **accessToken**: 헤더에 발급 후 프론트에서 로컬 스토리지 저장
+- **refreshToken**: 쿠키에 발급
+<br />
+
+### ⏩ Postman 테스트 결과
+<img src="https://github.com/user-attachments/assets/427aae58-7173-4fd5-b004-0e9d6043a40f" width="400px" />
+<img src="https://github.com/user-attachments/assets/6e65efa8-6e2c-4a80-acb1-1bda9f457fbe" width="400px" />
+
+> `/login` : Spring Security에서 기본으로 사용하는 로그인 엔드포인트
+
+`/login` POST 요청을 통해 닉네임과 비밀번호를 입력하면, 응답 헤더에 accessToken 값이 올바르게 뜨는 것을 확인할 수 있다!
+
+마찬가지로, refreshToken 또한 쿠키에 올바르게 발급되는 것을 확인할 수 있다!
+
+<br />
+
+## 3. 토큰 재발급 로직 구현
+
+1. 서버 측 `JWTFilter`에서 accessToken의 만료로 인한 특정한 상태 코드가 프론트엔드에게 응답
+2. 프론트 측의 예외 핸들러에서 accessToken 재발급을 위한 refreshToken을 서버 측으로 전송
+3. 서버에서는 refreshToken을 받아 새로운 accessToken을 응답
+4. 이때 accessToken 갱신 시 refreshToken도 함께 갱신 (⭐ **Refresh Rotate**)
+
+### ⭐ Refresh Rotate란?
+
+refreshToken을 받아 accessToken 갱신 시 refreshToken도 함께 갱신하는 방법
+
+Rotate 되기 이전의 토큰을 가지고 서버측으로 가도 인증이 되는 문제 발생!
+
+✅ 서버측에서 발급했던 refreshToken들을 기억한 뒤 **블랙리스트 처리**를 진행하는 로직을 작성해야 한다! 
+
+(Rotate 이전의 refreshToken은 사용하지 못하도록,,)
+
+
+- refreshToken 교체로 보안성 강화
+- 로그인 지속시간 길어짐
+
+생명주기가 긴 refreshToken은 발급 시 서버측 저장소에 저장한 후 서버에 **기억되어 있는 refreshToken만** 사용할 수 있도록 하는 것이 좋다 (**서버측 주도권**)
+
+1. **발급시** : refreshToken을 서버측 저장소에 저장
+
+2. **갱신시 (Refresh Rotate)** : 기존 refreshToken을 삭제하고 새로 발급한 refreshToken을 새로 저장
+
+### ✔️ 토큰 저장소
+
+RDB 또는 Redis와 같은 데이터베이스를 통해 refreshToken을 저장한다. 
+
+이때 Redis의 경우, `TTL` 설정을 통해 생명주기가 끝난 토큰을 자동으로 삭제할 수 있다는 장점이 있다.
+
+<br />
+
+## 4. 로그아웃 로직 구현
+`CustomLogoutFilter` 를 통해 로그아웃 로직을 구현한다.
+
+### 프론트엔드측
+
+로컬 스토리지에 존재하는 accessToken 삭제 및 서버측 로그아웃 경로로 refreshToken 전송
+
+### 백엔드측 
+- refreshToken을 받아 Cookie 초기화 (`NULL`) 후, Refresh DB에서 해당 refreshToken 삭제
+- 세션을 무효화하고, 인증 정보를 제거
+
+(nickname 기반으로 모든 refreshToken 삭제하는 로직 구현)
+
+### ⏩ Postman 테스트 결과
+<img src= "https://github.com/user-attachments/assets/cf1ff858-b887-494d-856e-640e15a2e6f9" width="80%" />
+
+> `/logout` : Spring Security에서 기본으로 사용하는 로그아웃 엔드포인트
+
+`/logout` POST 요청을 보낼 시, 쿠키에 있던 refreshToken 값이 사라지는 것을 확인할 수 있다!
+
+<br />
+
+## 5. 토큰이 필요한 API 구현
+
+### 기존 코드
+```java
+@Operation(summary = "게시글 전체 조회", description = "내가 작성한 전체 게시글을 조회하는 API")
+@GetMapping("/my/{memberId}")
+public CommonResponse<List<PostResponseDto>> getAllPosts(@PathVariable Long memberId) {
+
+    return new CommonResponse<>(ResponseCode.SUCCESS, postService.getAllPosts(memberId));
+}
+```
+
+### ♻️ 토큰값 적용한 코드
+```java
+@Operation(summary = "게시글 전체 조회", description = "내가 작성한 전체 게시글을 조회하는 API")
+@GetMapping("/my")
+public CommonResponse<List<PostResponseDto>> getAllPosts(@AuthenticationPrincipal CustomUserDetails userDetails) {
+
+    return new CommonResponse<>(ResponseCode.SUCCESS, postService.getAllPosts(userDetails.getMemberId()));
+}
+```
+
+### `@AuthenticationPrincipal`
+- Spring Security에서 현재 인증된 사용자 정보를 컨트롤러 메서드에 직접 주입할 때 사용하는 어노테이션
+- `CustomUserDetails` 를 주입함으로써, `memberId` 를 가져와 줌
+
+<br />
+
+<img src="https://github.com/user-attachments/assets/5c798a4e-244f-4d26-93df-c8242975639e" width="80%"/>
+
+로그인 시 응답 헤더에 기록되는 accessToken을 swagger의 Authorize 값에 넣어서 사용자 인증을 해야 한다!
+
+<br />
+
+<img src="https://github.com/user-attachments/assets/19b61b67-8c35-4416-958d-00be6f839f43" width="80%" />
+
+인증이 올바르게 되었다면, `memberId` 값을 입력하지 않아도 인증된 사용자 정보를 바탕으로 **사용자 토큰이 필요한 API 요청**이 성공적으로 실행되는 것을 볼 수 있다.
