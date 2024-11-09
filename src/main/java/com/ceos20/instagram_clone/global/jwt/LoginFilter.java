@@ -78,7 +78,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         addRefreshEntity(nickname, refresh, 1000L * 60 * 60 * 24 * 14);
 
         //응답 설정
-        response.setHeader("accessToken", access);
+        response.setHeader("Authorization", "Bearer " + access);
         response.addCookie(createCookie("refresh", refresh));
         response.setStatus(HttpStatus.OK.value());
         response.setContentType("application/json");

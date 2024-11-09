@@ -1380,10 +1380,153 @@ public CommonResponse<List<PostResponseDto>> getAllPosts(@AuthenticationPrincipa
 
 <img src="https://github.com/user-attachments/assets/5c798a4e-244f-4d26-93df-c8242975639e" width="80%"/>
 
-로그인 시 응답 헤더에 기록되는 accessToken을 swagger의 Authorize 값에 넣어서 사용자 인증을 해야 한다!
+✔️ 로그인 시 응답 헤더에 기록되는 accessToken을 swagger의 Authorize 값에 넣어서 사용자 인증을 해야 한다!
 
 <br />
 
 <img src="https://github.com/user-attachments/assets/19b61b67-8c35-4416-958d-00be6f839f43" width="80%" />
 
-인증이 올바르게 되었다면, `memberId` 값을 입력하지 않아도 인증된 사용자 정보를 바탕으로 **사용자 토큰이 필요한 API 요청**이 성공적으로 실행되는 것을 볼 수 있다.
+✔️ 인증이 올바르게 되었다면, `memberId` 값을 입력하지 않아도 인증된 사용자 정보를 바탕으로 **사용자 토큰이 필요한 API 요청**이 성공적으로 실행되는 것을 볼 수 있다.
+
+<br />
+
+## 📢 트러블 슈팅 < Swagger 403 오류 문제 >
+### 1. 문제점
+<img src="https://github.com/user-attachments/assets/40926b05-f578-4103-9b51-50b2f795b0c6" />
+
+토큰이 필요한 모든 API 요청 테스트 시, `403 Forbidden` 오류가 발생했다.
+
+> `403 Forbidden` : 접근 권한이 없는 경우
+
+**Swagger에서 `403 Forbidden` 오류가 발생하는 주요 원인에는 무엇이 있을까?**
+
+주로 **인증 또는 인가**에 문제가 있는 경우라고 한다.
+
+<br />
+
+#### 1. JWT 토큰이 누락되거나 잘못된 경우
+
+- 요청을 보낼 때, `Authorization` 헤더에 JWT 토큰을 포함하지 않았거나 잘못된 형식으로 포함한 경우
+
+🤔 Swagger의 Authorize 버튼을 통해, `/login` 시 응답 헤더로부터 전해진 accessToken 값을 올바르게 넘겼다고 생각한다!
+
+<br />
+
+#### 2. 토큰이 만료된 경우
+
+- JWT 토큰이 만료되면 인증이 실패함
+
+🤔 방금 로그인해서 받은 accessToken 값이기 때문에 만료되었을 리가 없다!
+
+<br />
+
+#### 3. Spring Security 설정에서 경로 접근 권한이 필요한 경우
+
+- 특정 경로에 대해 권한이 필요하지만, 요청을 보낸 사용자의 권한이 부족한 경우
+
+```java
+http
+        .authorizeHttpRequests((auth) -> auth
+        .requestMatchers("/login", "/", "/api/auth/signup", "/api/auth/reissue", "/swagger-ui.html", "/swagger-ui/**","/v3/api-docs/**").permitAll()
+                        .requestMatchers("/api/auth/admin").hasRole("ADMIN")    // ADMIN 권한 설정
+                        .anyRequest().authenticated()   // 따로 권한 설정 없이 인증만 이루어지면 접근 가능
+                );
+```
+
+🤔 admin 경로를 제외한 나머지 API 경로의 경우 따로 권한 설정을 하지 않았다!
+
+<br />
+
+#### 4. CORS 설정 문제
+
+- 클라이언트 (Swagger UI) 와 서버 도메인이 다를 때, `CORS` 설정이 올바르지 않으면 서버가 요청을 차단
+
+🤔 로컬 환경에서 `localhost:8080`을 통해 Swagger로 테스트한 경우이므로, 도메인이 달라 발생하는 오류인 `CORS` 에러가 원인일 가능성은 적다!
+
+<br />
+
+**해당 경우들이 모두 성립하지 않는데, 도대체 오류의 원인은 무엇일까??**
+
+<br />
+
+### 2. 문제의 원인
+```java
+/** [ JWTFilter 코드 ] **/
+
+@Override
+protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+            
+    // 헤더에서 access키에 담긴 토큰을 꺼냄
+    String accessToken = request.getHeader("access");
+
+    
+/** [ LoginFilter 코드 ] **/
+
+@Override 
+protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authentication) throws IOException {
+
+        ( 생략 )   
+        
+    // 로그인 성공 시 발급되는 토큰에 대한 응답 설정
+    response.setHeader("access", access);
+```
+
+처음에는 로그인을 성공할 경우 발급되는 accessToken에 대한 헤더 이름을 (확인하기 쉬우라고) `access` 라는 이름으로 설정을 진행하였다.
+
+내가 이렇게 작성했기 때문에 당연하게도 헤더에서 accessToken을 가져오는 경우, access 키에 담긴 토큰을 꺼내는 로직으로 `getHeader` 를 구현한 것이었다.
+
+**❗ 이게 바로 문제의 원인이었다 ❗**
+
+다시 swagger의 응답을 살펴보자.
+
+![스크린샷 2024-11-08 152843](https://github.com/user-attachments/assets/0dd73c1b-5cc7-401c-82cb-eb0a1303933f)
+
+`Authorization : Bearer <token>` 형태로 accessToken 값이 들어오고 있음을 확인할 수 있다!
+
+이런 상황에서 나의 코드는 헤더의 access 키의 토큰을 꺼내줘! 라고 요청하고 있으니 swagger에서는 토큰에 대한 인식 자체를 하지 못한 것이었다. 
+
+### ⭐ `Authorization : Bearer <token>`
+
+- HTTP 표준과 Spring Security에서 토큰 기반 인증 정보를 전달하는 표준 방식
+- 대부분의 클라이언트 라이브러리 (예: Axios, Postman, Swagger 등) 와 브라우저의 인증 토큰 관리 방식이 `Authorization` 헤더에 의존한다고 함
+
+`Authorization` 헤더 대신 다른 이름을 사용하면, 자동으로 `Bearer` 토큰을 인식하지 못하고 인증 처리가 누락될 가능성 존재!!
+
+<br />
+
+### 3. 해결책
+```java
+/** [ JWTFilter 코드 ] **/
+
+@Override
+protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+
+    // Authorization 헤더값 추출
+    String header = request.getHeader("Authorization");
+    if (header == null || !header.startsWith("Bearer ")) {
+        filterChain.doFilter(request, response);
+        return;
+    }
+
+    // "Bearer " 접두사 제거 후 accessToken만 추출
+    String token = header.substring(7);
+
+    
+/** [ LoginFilter 코드 ] **/
+
+@Override 
+protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authentication) throws IOException {
+
+        ( 생략 )   
+        
+    // 로그인 성공 시 발급되는 토큰에 대한 응답 설정 -> 표준 방식으로 수정
+    response.setHeader("Authorization", "Bearer " + access);
+```
+
+<br />
+
+#### < 최종 결과 >
+
+<img src="https://github.com/user-attachments/assets/a8870ebc-0a19-4f98-a1e3-5f40bda4f8a9" width="400px"/>
+
+<img src="https://github.com/user-attachments/assets/1ba4fa6f-da71-4add-b886-1ff49cb7ca6c" width="400px"/>
