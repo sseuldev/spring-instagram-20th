@@ -1235,6 +1235,8 @@ configuration.setAllowedOrigins(Collections.singletonList("http://localhost:3000
 
 ## 2. 로그인 로직 구현
 
+<img src="https://github.com/user-attachments/assets/e9716b08-6b13-4005-81c7-5f6c261f5949" />
+
 ### 1. LoginFilter
 
 - 커스텀 `UsernamePasswordAuthentication` 필터 작성 (상속받아 사용)
