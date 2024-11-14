@@ -26,13 +26,13 @@ public class MemberController {
     public CommonResponse<MemberResponseDto> memberInfo(@AuthenticationPrincipal CustomUserDetails userDetails) {
 
         Long memberId = userDetails.getMemberId();
-        return new CommonResponse<>(ResponseCode.SUCCESS, memberService.getMemberInfo(memberId));
+        return new CommonResponse<>(ResponseCode.SUCCESS, memberService.getMemberInfo(memberId), "회원 정보 조회를 성공하였습니다");
     }
 
     @PutMapping
     @Operation(summary = "회원 정보 수정", description = "회원의 프로필 정보를 수정하는 API")
     public CommonResponse<MemberResponseDto> updateMemberInfo(@AuthenticationPrincipal CustomUserDetails userDetails, @Valid @RequestBody MemberRequestDto request) {
 
-        return new CommonResponse<>(ResponseCode.SUCCESS, memberService.updateMemberInfo(request, userDetails.getMemberId()));
+        return new CommonResponse<>(ResponseCode.SUCCESS, memberService.updateMemberInfo(request, userDetails.getMemberId()), "회원 정보 수정을 성공하였습니다");
     }
 }

@@ -30,7 +30,7 @@ public class AuthController {
     @Operation(summary = "회원가입", description = "회원가입 요청 API")
     public CommonResponse<MemberResponseDto> signup(@Valid @RequestBody SignupRequestDto request) {
 
-        return new CommonResponse<>(ResponseCode.SUCCESS, authService.signup(request));
+        return new CommonResponse<>(ResponseCode.SUCCESS, authService.signup(request), "회원가입을 성공하였습니다");
     }
 
     @PostMapping("/reissue")
@@ -45,7 +45,7 @@ public class AuthController {
 
         authService.setNewTokens(response, newAccessToken, RefreshTokenCookie);
 
-        return new CommonResponse<>(ResponseCode.SUCCESS);
+        return new CommonResponse<>(ResponseCode.SUCCESS, "토근 재발급을 성공하였습니다");
     }
 
     @GetMapping("/admin")

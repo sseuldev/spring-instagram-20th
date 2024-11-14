@@ -27,14 +27,14 @@ public class CommentController {
     @PostMapping
     public CommonResponse<CommentResponseDto> createComment(@PathVariable Long postId, @AuthenticationPrincipal CustomUserDetails userDetails, @Valid @RequestBody CommentRequestDto request) {
 
-        return new CommonResponse<>(ResponseCode.SUCCESS, commentService.createComment(request, postId, userDetails.getMemberId()));
+        return new CommonResponse<>(ResponseCode.SUCCESS, commentService.createComment(request, postId, userDetails.getMemberId()),"댓글 작성을 성공하였습니다");
     }
 
     @Operation(summary = "게시글 댓글 조회", description = "특정 게시글의 전체 댓글을 조회하는 API")
     @GetMapping
     public CommonResponse<List<CommentResponseDto>> getAllComments(@PathVariable Long postId) {
 
-        return new CommonResponse<>(ResponseCode.SUCCESS, commentService.getAllPostComment(postId));
+        return new CommonResponse<>(ResponseCode.SUCCESS, commentService.getAllPostComment(postId), "게시글 댓글 조회를 성공하였습니다");
     }
 
     @Operation(summary = "댓글 삭제", description = "댓글을 삭제하는 API")
@@ -42,6 +42,6 @@ public class CommentController {
     public CommonResponse<Void> deleteComment(@PathVariable Long postId, @PathVariable Long commentId, @AuthenticationPrincipal CustomUserDetails userDetails) {
 
         commentService.deleteComment(commentId, postId, userDetails.getMemberId());
-        return new CommonResponse<>(ResponseCode.SUCCESS);
+        return new CommonResponse<>(ResponseCode.SUCCESS, "댓글 삭제를 성공하였습니다");
     }
 }
