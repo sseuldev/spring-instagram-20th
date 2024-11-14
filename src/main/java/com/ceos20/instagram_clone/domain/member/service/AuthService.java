@@ -168,7 +168,7 @@ public class AuthService {
      * **/
     public void setNewTokens(HttpServletResponse response, String newAccessToken, Cookie refreshCookie) {
 
-        response.setHeader("access", newAccessToken);
+        response.setHeader("Authorization", "Bearer " + newAccessToken);
 
         response.addCookie(refreshCookie);
     }
