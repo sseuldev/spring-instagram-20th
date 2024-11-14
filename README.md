@@ -1532,3 +1532,400 @@ protected void successfulAuthentication(HttpServletRequest request, HttpServletR
 <img src="https://github.com/user-attachments/assets/a8870ebc-0a19-4f98-a1e3-5f40bda4f8a9" width="400px"/>
 
 <img src="https://github.com/user-attachments/assets/1ba4fa6f-da71-4add-b886-1ff49cb7ca6c" width="400px"/>
+
+<br />
+
+<br />
+
+# 5. Docker
+
+## 5-1. Docker 이해하기
+
+## 🐋 Docker 란?
+
+<img width="80%" alt="스크린샷 2021-08-19 오후 6 12 36" src="https://github.com/user-attachments/assets/81b5a8b4-1ade-417d-9f77-9567884d4373">
+
+- 애플리케이션을 신속하게 구축, 테스트 및 배포할 수 있는 소프트웨어 플랫폼
+
+- 애플리케이션과 그에 필요한 모든 라이브러리, 종속성, 설정 파일 등을 **컨테이너**라는 독립된 환경에 패키징하여, 어디서든 일관되게 실행할 수 있도록 해줌 (운영환경 의존X)
+
+- **docker hub**에서 **image**를 `pull` 하고, **image** 를 `run` 하면 **container**가 실행
+
+- 활용 예시 ) 애플리케이션 배포, 개발 환경 구축, `CI/CD` 파이프라인 
+
+<br />
+
+## 🐋 Docker에서의 이미지란?
+
+- 컨테이너를 만들기 위한 템플릿
+
+- 애플리케이션을 실행할 수 있는 환경(운영 체제, 라이브러리, 애플리케이션 파일 등)을 포함하는 **읽기 전용 파일 시스템**
+  - 도커 **이미지**에는 애플리케이션 실행에 필요한 소프트웨어와 환경이 모두 들어 있으며, 이를 통해 어디서든 동일한 환경에서 일관되게 애플리케이션을 실행할 수 있음
+      
+
+- 예시) **MySQL 이미지**
+    - `mysql:5.7`과 같은 Docker 이미지는 MySQL 서버를 실행할 수 있는 환경을 제공하는 템플릿
+  
+    - `docker pull mysql:5.7` : 'MySQL 이미지를 Docker Hub 에서 다운받는다' 는 의미
+
+<br />
+
+## 🐋 Docker에서의 컨테이너란?
+
+- **이미지**를 실행하여 만든 **실제 실행 중인 환경**
+
+- **컨테이너**는 독립적이고 격리된 환경에서 애플리케이션을 실행
+
+- 예시) **MySQL 컨테이너**
+  - `mysql:5.7` **이미지**를 실행하여 MySQL 서버를 작동시키는 **컨테이너**를 생성
+  
+  - `docker run -d --name mysql-container mysql:5.7` : `mysql:5.7` **이미지**를 실행하여 `mysql-container`이라는 이름의 **MySQL 컨테이너** 만들기
+
+<br />
+
+## 🐋 Docker에서의 네크워크란?
+
+- 여러 **컨테이너**가 서로 **통신**할 수 있도록 해주는 **가상 네트워크**
+
+- 기본적으로 **Docker 컨테이너**는 **브리지 네트워크**에 연결
+  ⇒ 동일한 Docker 호스트 내에서 컨테이너들이 서로 통신 가능하게 해줌
+
+```c
+docker network create my-network
+docker run -d --name container1 --network my-network my-image
+docker run -d --name container2 --network my-network my-image
+```
+
+✔️ `my-network`라는 네트워크를 만들고, `container1`과 `container2`라는 컨테이너를 그 네트워크에 연결
+
+✔️ 두 컨테이너는 서로 통신 가능!
+
+<br />
+
+## 최종 정리
+
+- **도커 파일 (Dockerfile)** : 이미지를 만드는 설정 파일 (레시피)
+
+- **이미지 (Image)**: 애플리케이션을 실행할 수 있는 환경을 제공하는 템플릿 (레시피의 준비물)
+
+- **컨테이너 (Container)**: 이미지를 실행한 실제 인스턴스 (요리)
+
+- **네트워크 (Network)**: 여러 컨테이너가 서로 통신할 수 있도록 해주는 가상 네트워크 (테이블 연결)
+
+👉 도커 이미지는 **준비된 상태**이고, 도커 컨테이너는 이 준비된 이미지를 **실제로 실행**한 결과
+
+<br />
+
+## 5-2. Docker 기반 스프링부트 빌드하기
+
+## 1. Dockerfile
+
+> Gradle 탭에서 Tasks-build-bootJar 실행 → build/libs 경로에 jar 파일 생성 → Dockerfile 설정
+
+- **Docker 이미지**를 생성하기 위한 설정 파일
+
+- 1개의 컨테이너 생성하는 파일
+
+- 애플리케이션 코드, 라이브러리, 환경 변수, 설정 파일 등을 포함하는 **애플리케이션의 실행 환경**을 나타냄
+
+<br />
+
+## 2. docker-compose.yml
+
+- **MySQL**과 **Spring Boot 애플리케이션**을 컨테이너화하여 실행하는 설정
+
+- 여러 개의 **서비스 (컨테이너)** 를 생성할 수 있는 파일
+
+- 두 서비스를 동일한 **네트워크**에 연결하여 서로 통신할 수 있게끔 해줌
+
+- `depends_on`과 `healthcheck`를 사용하여 **`application` 서비스**가 **`database` 서비스**가 준비된 후에 시작되도록 보장
+
+
+```yaml
+version: "3"
+
+services:
+  database:
+    container_name: instagram
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: testdb
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      TZ: 'Asia/Seoul'
+    ports:
+      - "3306:3306"
+    command:
+      - "--character-set-server=utf8mb4"
+      - "--collation-server=utf8mb4_unicode_ci"
+    networks:
+      - network
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -p${DB_PASSWORD} --silent"]
+      interval: 30s
+      retries: 5
+
+  application:
+    container_name: main-server
+    build:
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: ${DB_URL}
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - network
+    env_file:
+      - .env
+
+networks:
+  network:
+    driver: bridge
+```
+
+## ⭐ 코드 해석
+
+### `services :`
+
+- Compose 파일 내에서 **각각의 컨테이너**를 정의하는 부분
+- 각 서비스는 개별 컨테이너로 실행되며, `database`, `application`과 같은 이름을 가진 서비스들을 정의
+
+<br />
+
+### 1. `database` 서비스
+
+```yaml
+  database:
+    container_name: instagram
+```
+
+- `database` 서비스에 대한 컨테이너 이름을 `instagram`으로 설정
+
+✅MySQL 데이터베이스를 실행하는 **Docker 컨테이너** `instagram` 생성!
+
+<br />
+
+`image: mysql:8.0`
+
+- 사용할 **Docker 이미지**를 지정
+- 해당 이미지는 MySQL 데이터베이스 서버를 실행하는 데 필요한 모든 구성 요소를 포함
+
+<br />
+
+```yaml
+environment:
+  MYSQL_DATABASE: testdb
+  MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+  TZ: 'Asia/Seoul'
+```
+
+- `MYSQL_DATABASE`
+  - MySQL이 처음 실행될 때 자동으로 생성할 데이터베이스 이름을 지정 
+  - 여기서는 `testdb`라는 데이터베이스가 생성 (내 MySQL 데이터베이스명과 일치)
+
+❗**애플리케이션과 데이터베이스 컨테이너는 동일한 데이터베이스 이름과 비밀번호를 사용**해야함
+
+<br />
+
+```yaml
+ports:
+  - "3306:3306"
+```
+
+- 포트 매핑 ⇒ 로컬 시스템에서 **컨테이너 내 MySQL**에 접근할 수 있다!
+- Docker 컨테이너 내의 MySQL 서비스는 기본적으로 3306 포트를 사용하는데 이 포트를 호스트 시스템의 3306 포트와 연결
+- `3306:3306` 형식은 호스트(로컬) 포트와 컨테이너 포트를 매핑하는 방식
+
+<br />
+
+```yaml
+command:
+  - "--character-set-server=utf8mb4"
+  - "--collation-server=utf8mb4_unicode_ci"
+
+```
+
+- MySQL 커맨드 옵션
+- **이모지**나 **다국어 문자**를 처리하는 데 문제가 없으며, MySQL에서 더 널리 사용되는 **UTF-8 문자 집합**을 사용할 수 있게 해줌
+
+<br />
+
+```yaml
+networks:
+  - network
+```
+
+- 이 서비스가 연결될 네트워크를 지정
+- 여기서는 `network`라는 이름의 사용자 정의 네트워크에 이 서비스가 연결됨
+
+<br />
+
+```yaml
+healthcheck:
+  test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -p${DB_PASSWORD} --silent"]
+  interval: 30s
+  retries: 5
+```
+
+`healthcheck`는 컨테이너가 정상적으로 작동하는지 확인하는 방법을 설정하는 역할
+
+- `application` 서비스가 **`database` 서비스가 준비되었을 때만** 실행되도록 할 수 있음
+
+- `test`: `mysqladmin ping` 명령어를 사용하여 MySQL 서버가 정상적으로 동작하는지 확인
+  
+    ✔️ `-h 127.0.0.1`은 MySQL 서버의 호스트를 지정 
+    
+    ✔️ `-p${DB_PASSWORD}`는 MySQL의 root 비밀번호를 전달
+
+- `interval`: `healthcheck`를 실행하는 간격
+
+- `retries`: `healthcheck` 실패 시 재시도 횟수를 설정
+
+<br />
+
+### 2. `application` 서비스
+
+```yaml
+application:
+  container_name: main-server
+```
+
+- 이 서비스의 컨테이너 이름을 `main-server`로 설정
+
+<br />
+
+```yaml
+build:
+  dockerfile: Dockerfile
+```
+
+- 애플리케이션 이미지를 빌드할 때 사용할 `Dockerfile`을 지정
+  
+    ⇒ 현재 디렉토리에서 `Dockerfile`을 사용하여 애플리케이션 이미지를 빌드함
+- `Dockerfile` : 내 현재 Spring Boot 애플리케이션을 Docker 이미지로 만든 것
+
+<br />
+
+```yaml
+ports:
+  - "8080:8080"
+```
+
+- 애플리케이션이 사용하는 포트를 호스트와 연결
+- `8080` 포트를 매핑하여, 호스트의 `8080` 포트에서 애플리케이션에 접근할 수 있도록 함
+
+<br />
+
+```yaml
+environment:
+  SPRING_DATASOURCE_URL: ${DB_URL}
+  SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
+  SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+```
+
+- Spring Boot 애플리케이션이 데이터베이스에 연결하기 위한 설정
+- `DB_URL` = `jdbc:mysql://instagram:3306/testdb?useSSL=false&serverTimezone=Asia/Seoul`
+  
+⭐ 여기서 **database 컨테이너명**인 `instagram` 을 사용하고 있음을 주목하자!
+
+`application` 서비스는 `database` 서비스에 접근할 때 `instagram`을 호스트 이름으로 사용하여 MySQL에 연결하기 때문이다!!
+
+❗ 해당 값들은 원래 사용 중인 실제 MySQL 데이터베이스의 정보와 동일하게 설정해야 함
+
+<br />
+
+```yaml
+depends_on:
+  database:
+    condition: service_healthy
+```
+
+- `depends_on`
+    - `application` 서비스가 시작되기 전에 `database` 서비스가 실행 중이어야 하며, **단순히 실행 순서만 보장**
+- `condition: service_healthy`
+    - `application` 서비스가 시작되기 전에 `database` 서비스가 **건강한 상태**(즉, `healthcheck`가 성공적으로 통과한 상태)일 때만 실행
+    - `database` 서비스의 `healthcheck`가 성공할 때까지 `application` 서비스의 시작을 지연시킴
+
+<br />
+
+```yaml
+networks:
+  - network
+```
+
+- `application` 서비스가 `network` 네트워크에 연결되도록 설정
+- `database` 서비스와 동일한 네트워크에 속하게 되어 서로 통신할 수 있음
+
+<br />
+
+### 3. network
+
+```yaml
+networks:
+    network:
+	  driver: bridge
+```
+
+- 사용자 정의 네트워크를 정의
+- `bridge`는 기본 Docker 네트워크 드라이버로, 이 네트워크에 연결된 컨테이너는 서로 통신할 수 있음
+
+❗ 컨테이너 간 연결을 위해 네트워크는 필수!
+
+<br />
+
+## 📢 트러블 슈팅 < MySQL 서버와의 연결 실패 >
+### 1. 문제점
+1. `connection refused` 문제
+2. `Communications link failure` 문제
+
+
+#### 두 에러의 공통 원인:
+- **MySQL 서버가 실행되지 않음** 또는 **연결 준비가 되지 않음**
+- **잘못된 연결 정보** (호스트, 포트, 사용자명, 비밀번호 등)
+
+두 문제 모두 MySQL 서버와의 연결이 실패했을 때 발생하는 문제라고 한다..
+
+<br />
+
+### 2. 발생 원인
+**✅ 첫번째 원인으로는,** 
+
+현재 나의 데이터베이스 비밀번호에 `$` 가 포함되어 있는데, `yml`에 환경변수를 사용하지 않고 바로 작성하다보니 해당 문자를 인식하지 못해 `password : no` 현상이 발생하였다.
+
+**✅ 두번째 원인으로는,**
+
+`depends_on` 만 사용하고 `Healthcheck` 는 해주지 않았다. 
+
+`application` 서비스가 `database` 서비스에 연결하려고 시도할 때, MySQL 서버가 아직 완전히 시작되지 않았거나 준비되지 않은 상태일 수 있기 때문에 이를 확인해주는 로직이 필요하다고 한다!
+
+#### ✔️️ `depends_on`과 `healthcheck`의 차이점
+
+- `depends_on` : 서비스가 **실행되었는지**만 확인, 실행 순서를 보장하지만 서비스가 실제로 **준비되었는지**는 보장하지 않음
+- `healthcheck` : **서비스가 정상적으로 작동하는지** (즉, MySQL이 준비되었는지) 확인하는 데 사용
+
+`depends_on`만 사용했을 경우, `database` 서비스가 **실행 중**인지! **준비 상태**인지! 확인할 방법이 없다..
+
+<br />
+
+### 3. 해결 방법
+> thanks to.. 최서지 (`@choiseoji`)
+1. 환경변수 `.env` 파일을 만들어주었다!
+2. `Healthcheck` 기능을 추가해주었다!
+
+### ⭐ Healthcheck 의 역할
+
+- 컨테이너가 정상적으로 동작하는지 주기적으로 검사하는 기능
+
+- **컨테이너가 정상적으로 준비되었을 때만** 다른 서비스가 시작되도록 할 수 있음
+
+- 예시) `database` 컨테이너 실행 OK!! 👉 `application` 컨테이너 실행 시작!!
+
+<br />
+
+### 4. 최종 결과
+![스크린샷 2024-11-14 140257](https://github.com/user-attachments/assets/4ffc60e1-d461-4e98-b73d-a79155b7f436)
+![스크린샷 2024-11-14 140336](https://github.com/user-attachments/assets/ecac7e43-8b4e-41c2-b2b5-925fd10ebb51)
