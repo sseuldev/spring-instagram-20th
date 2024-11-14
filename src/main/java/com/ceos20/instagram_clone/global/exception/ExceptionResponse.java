@@ -8,5 +8,6 @@ import lombok.RequiredArgsConstructor;
 public class ExceptionResponse {
 
     private final int code;
+    private boolean inSuccess = false;
     private final String message;
 }
