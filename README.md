@@ -1877,7 +1877,7 @@ networks:
 
 <br />
 
-## 📢 트러블 슈팅 < MySQL 서버와의 연결 실패 >
+## 📢 트러블 슈팅 - 1 < MySQL 서버와의 연결 실패 >
 ### 1. 문제점
 1. `connection refused` 문제
 2. `Communications link failure` 문제
@@ -1929,3 +1929,42 @@ networks:
 ### 4. 최종 결과
 ![스크린샷 2024-11-14 140257](https://github.com/user-attachments/assets/4ffc60e1-d461-4e98-b73d-a79155b7f436)
 ![스크린샷 2024-11-14 140336](https://github.com/user-attachments/assets/ecac7e43-8b4e-41c2-b2b5-925fd10ebb51)
+
+<br />
+
+## 📢 트러블 슈팅 - 2 < Access denied for user 'root'@'172.18.0.1' 오류  >
+### 1. 문제점
+Docker 연결 잘됐고, `8080`도 다 잘 떴어.
+
+그래서 이제 API 리팩토링하고 스프링부트 `run` 했는데 `Access denied for user 'root'@'172.18.0.1'` 에러가 뜨네?
+
+해당 오류는 MySQL 서버에서 root 사용자가 **IP 주소 172.18.0.1**에서 접속을 거부당했다는 것을 의미한다..
+
+<br />
+
+### 2. 발생 원인
+MySQL에서 **root 사용자**는 기본적으로 로컬에서만 접속을 허용하도록 설정된다고 한다.
+
+즉, root 사용자가 `localhost` 또는 `127.0.0.1`에서만 접속할 수 있도록 제한되어 있다는 의미이다.
+
+이러한 상황에서 Docker 네트워크 내 다른 컨테이너 (외부 IP) 에서 접속을 시도하는 상황이기 때문에 접근을 차단하는 것이었다!
+
+<br />
+
+### 3. 해결 방법
+root 사용자가 다른 IP에서도 접속할 수 있도록 권한을 수정해야 한다!
+
+1. MySQL 컨테이너에 접속
+
+```yaml
+docker exec -it <mysql-container-name> mysql -u root -p
+```
+
+2. root 사용자에 대해 외부 호스트에서의 접속을 허용하도록 권한 변경
+```yaml
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY 'your_password' WITH GRANT OPTION;
+
+FLUSH PRIVILEGES;
+```
+
+❗ 이때, **DB_URL** 은 `localhost` 로 다시 수정하기 
