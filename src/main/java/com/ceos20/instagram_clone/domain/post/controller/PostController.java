@@ -16,8 +16,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-// TODO: memberId 바꾸기
-
 @RestController
 @RequestMapping("/api/post")
 @RequiredArgsConstructor
