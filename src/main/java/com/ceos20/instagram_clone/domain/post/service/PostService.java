@@ -1,5 +1,7 @@
 package com.ceos20.instagram_clone.domain.post.service;
 
+import com.ceos20.instagram_clone.domain.hashtag.entity.Hashtag;
+import com.ceos20.instagram_clone.domain.hashtag.entity.Posthashtag;
 import com.ceos20.instagram_clone.domain.member.entity.Member;
 import com.ceos20.instagram_clone.domain.post.dto.request.PostRequestDto;
 import com.ceos20.instagram_clone.domain.post.dto.response.PostResponseDto;
@@ -23,6 +25,7 @@ public class PostService {
     private final PostRepository postRepository;
     private final PostlikeRepository postlikeRepository;
     private final MemberRepository memberRepository;
+    private final PosthashtagRepository posthashtagRepository;
 
     public Member findMemberById(Long memberId) {
         return memberRepository.findByIdAndDeletedAtIsNull(memberId).orElseThrow(() -> new BadRequestException(NOT_FOUND_MEMBER_ID));
@@ -52,8 +55,14 @@ public class PostService {
     public PostResponseDto getPost(Long postId) {
 
         Post post = findPostById(postId);
+        List<Posthashtag> postHashtags = posthashtagRepository.findByPostId(postId);
 
-        return PostResponseDto.from(post);
+        List<Hashtag> hashtags = postHashtags.isEmpty() ? null :
+                postHashtags.stream()
+                        .map(Posthashtag::getHashtag)
+                        .toList();
+
+        return PostResponseDto.from(post, hashtags);
     }
 
     /** [ 주요기능 ]
@@ -65,7 +74,16 @@ public class PostService {
         List<Post> posts = postRepository.findAllByMemberAndDeletedAtIsNull(member);
 
         return posts.stream()
-                .map(PostResponseDto::from)
+                .map(post -> {
+                    List<Posthashtag> postHashtags = posthashtagRepository.findByPostId(post.getId());
+
+                    List<Hashtag> hashtags = postHashtags.isEmpty() ? null :
+                            postHashtags.stream()
+                                    .map(Posthashtag::getHashtag)
+                                    .toList();
+
+                    return PostResponseDto.from(post, hashtags);
+                })
                 .toList();
     }
 

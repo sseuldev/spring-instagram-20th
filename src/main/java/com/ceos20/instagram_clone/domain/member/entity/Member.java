@@ -29,11 +29,17 @@ public class Member extends BaseEntity {
     @Column(length = 320)
     private String email;
 
+    @Column(length = 20)
+    private String phoneNumber;
+
     @Column(nullable = false)
     private String password;
 
     @Column(length = 50, nullable = false)
     private String nickname;
+
+    @Column
+    private String role;
 
     @Column(name = "profile_url", columnDefinition = "text")
     private String profileUrl;
@@ -64,9 +70,11 @@ public class Member extends BaseEntity {
     }
 
     @Builder
-    public Member(String name, String email, String password, String nickname, String profileUrl, String introduce, String linkUrl, String status, LocalDateTime inactiveDate) {
+    public Member(String name, String email, String role, String phoneNumber, String password, String nickname, String profileUrl, String introduce, String linkUrl, String status, LocalDateTime inactiveDate) {
         this.name = name;
         this.email = email;
+        this.role = role;
+        this.phoneNumber = phoneNumber;
         this.password = password;
         this.nickname = nickname;
         this.profileUrl = profileUrl;
