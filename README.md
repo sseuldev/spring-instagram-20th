@@ -1521,7 +1521,7 @@ protected void successfulAuthentication(HttpServletRequest request, HttpServletR
 
         ( 생략 )   
         
-    // 로그인 성공 시 발급되는 토큰에 대한 응답 설정 -> 표준 방식으로 수정
+    // 로그인 성공 시 발급되는 토큰에 대한 응답 설정 -> 표준 방식으로 수정!
     response.setHeader("Authorization", "Bearer " + access);
 ```
 
