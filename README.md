@@ -1537,7 +1537,6 @@ protected void successfulAuthentication(HttpServletRequest request, HttpServletR
 
 <br />
 
-> 죄송합니다.. 제가 push 를 너무 빨리 해서 이번 과제한게 저번 pr에 들어가 있습니다.. 흐엉ㅜ
 # 5. Docker
 
 ## 5-1. Docker 이해하기
