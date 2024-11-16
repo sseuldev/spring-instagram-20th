@@ -9,7 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import static com.ceos20.instagram_clone.global.exception.ExceptionCode.*;
+import static com.ceos20.instagram_clone.global.exception.ExceptionCode.NOT_FOUND_MEMBER_ID;
 
 @Service
 @Transactional(readOnly = true)

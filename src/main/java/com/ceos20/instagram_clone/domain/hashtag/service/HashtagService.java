@@ -35,15 +35,12 @@ public class HashtagService {
         return postRepository.findByIdAndDeletedAtIsNull(postId).orElseThrow(() -> new BadRequestException(NOT_FOUND_POST_ID));
     }
 
-    /**
-     * 특정 게시글에 해시태그 추가
-     * **/
     @Transactional
-    public PosthashtagResponseDto addHashtagsToPost(Long postId, PosthashtagRequestDto request) {
+    public PosthashtagResponseDto addHashtagsToPost(Long postId, List<String> hashtags) {
 
         Post post = findPostById(postId);
 
-        List<Hashtag> postHashtags = request.hashtagNames().stream()
+        List<Hashtag> postHashtags = hashtags.stream()
                 .map(this::findOrCreateHashtag)
                 .toList();
 

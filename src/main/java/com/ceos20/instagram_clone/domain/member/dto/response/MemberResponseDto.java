@@ -13,7 +13,6 @@ public record MemberResponseDto(
         String name,
         String nickname,
         String email,
-        String phoneNumber,
         String profileUrl,
         String linkUrl,
         String introduce,
@@ -25,7 +24,6 @@ public record MemberResponseDto(
                 .name(member.getName())
                 .nickname(member.getNickname())
                 .email(member.getEmail())
-                .phoneNumber(member.getPhoneNumber())
                 .profileUrl(member.getProfileUrl())
                 .linkUrl(member.getLinkUrl())
                 .introduce(member.getIntroduce())

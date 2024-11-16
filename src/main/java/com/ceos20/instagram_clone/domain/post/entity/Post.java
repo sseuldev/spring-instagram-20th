@@ -1,7 +1,6 @@
 package com.ceos20.instagram_clone.domain.post.entity;
 
 import com.ceos20.instagram_clone.domain.comment.entity.Comment;
-import com.ceos20.instagram_clone.domain.hashtag.entity.Posthashtag;
 import com.ceos20.instagram_clone.domain.member.entity.Member;
 import com.ceos20.instagram_clone.global.common.BaseEntity;
 import jakarta.persistence.*;
@@ -37,9 +36,6 @@ public class Post extends BaseEntity {
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Image> images = new ArrayList<>();
-
-    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Posthashtag> hashtags = new ArrayList<>();
 
     public void updateCommentCount(int commentCount) {
         this.commentCount = commentCount;

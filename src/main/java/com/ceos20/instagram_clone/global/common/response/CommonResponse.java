@@ -12,16 +12,16 @@ public class CommonResponse<T> {
     private String message;
     private T result;
 
-    public CommonResponse(ResponseCode status, T result, String message) {
+    public CommonResponse(ResponseCode status, T result) {
         this.code = status.getCode();
         this.inSuccess = status.isInSuccess();
-        this.message = message;
+        this.message = status.getMessage();
         this.result = result;
     }
 
-    public CommonResponse(ResponseCode status, String message) {
+    public CommonResponse(ResponseCode status) {
         this.code = status.getCode();
         this.inSuccess = status.isInSuccess();
-        this.message = message;
+        this.message = status.getMessage();
     }
 }
